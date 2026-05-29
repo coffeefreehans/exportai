@@ -1,0 +1,73 @@
+services:
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://server:4000
+    ports:
+      - "3002:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://server:4000
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - exportai-network
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://exportai:exportai_secret@postgres:5432/exportai?schema=public
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PORT=4000
+      - NODE_ENV=production
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3002,http://server:4000
+      - WEB_URL=http://localhost:3002
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/api/health', r => r.statusCode === 200 ? process.exit(0) : process.exit(1)).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - exportai-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: exportai
+      POSTGRES_PASSWORD: exportai_secret
+      POSTGRES_DB: exportai
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U exportai -d exportai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - exportai-network
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  exportai-network:
+    driver: bridge

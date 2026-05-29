@@ -1,0 +1,31 @@
+sequenceDiagram
+    participant Stripe as Stripe
+    participant API as 后端 /api/stripe/webhook
+    participant MemSvc as MembershipService
+    participant StripeSvc as StripeService
+    participant DB as PostgreSQL
+
+    Stripe->>API: POST /api/stripe/webhook (raw body + sig header)
+    API->>StripeSvc: verifyWebhookSignature(payload, sig)
+    StripeSvc-->>API: Event { type, data }
+    
+    alt event.type = checkout.session.completed
+        API->>MemSvc: handleCheckoutComplete(session)
+        MemSvc->>DB: 查找 Membership by stripeCustomerId or userId
+        alt 找到现有记录
+            MemSvc->>DB: 更新 status=ACTIVE, planType, expiresAt
+        else 无记录
+            MemSvc->>DB: 创建新 Membership (status=ACTIVE)
+        end
+    else event.type = customer.subscription.updated
+        API->>MemSvc: handleSubscriptionUpdated(subscription)
+        MemSvc->>DB: 更新 planType, status, expiresAt
+    else event.type = customer.subscription.deleted
+        API->>MemSvc: handleSubscriptionDeleted(subscription)
+        MemSvc->>DB: 更新 status=EXPIRED, expiresAt=now
+    else event.type = invoice.payment_failed
+        API->>MemSvc: handleInvoicePaymentFailed(invoice)
+        MemSvc->>DB: 更新 status=EXPIRED (宽限期后)
+    end
+    
+    API-->>Stripe: 200 { received: true }

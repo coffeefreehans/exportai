@@ -1,0 +1,157 @@
+classDiagram
+    class User {
+        +String id
+        +String email
+        +String passwordHash
+        +Boolean isActive
+        +DateTime createdAt
+        +DateTime updatedAt
+        +RefreshToken[] refreshTokens
+        +PasswordReset[] passwordResets
+        +Membership membership
+    }
+
+    class RefreshToken {
+        +String id
+        +String userId
+        +String token
+        +DateTime expiresAt
+        +DateTime createdAt
+        +DateTime revokedAt
+        +User user
+    }
+
+    class PasswordReset {
+        +String id
+        +String userId
+        +String token
+        +DateTime expiresAt
+        +DateTime usedAt
+        +DateTime createdAt
+        +User user
+    }
+
+    class Membership {
+        +String id
+        +String userId
+        +PlanType planType
+        +MembershipStatus status
+        +String stripeCustomerId
+        +String stripeSubscriptionId
+        +String stripePaymentIntentId
+        +DateTime expiresAt
+        +DateTime cancelledAt
+        +DateTime createdAt
+        +DateTime updatedAt
+        +isMember() Boolean
+        +isExpired() Boolean
+    }
+
+    class PlanType {
+        <<enum>>
+        MONTHLY
+        YEARLY
+        LIFETIME
+    }
+
+    class MembershipStatus {
+        <<enum>>
+        ACTIVE
+        EXPIRED
+        CANCELLED
+    }
+
+    class AuthService {
+        +register(email: String, password: String) Promise~AuthResult~
+        +login(email: String, password: String) Promise~AuthResult~
+        +logout(userId: String, refreshToken: String) Promise~void~
+        +forgotPassword(email: String) Promise~void~
+        +resetPassword(token: String, newPassword: String) Promise~void~
+        +getMe(userId: String) Promise~User~
+    }
+
+    class TokenService {
+        +generateAccessToken(userId: String) String
+        +generateRefreshToken(userId: String) Promise~RefreshToken~
+        +verifyAccessToken(token: String) TokenPayload
+        +verifyRefreshToken(token: String) Promise~RefreshToken~
+        +refreshTokens(refreshToken: String) Promise~AuthResult~
+        +revokeRefreshToken(token: String) Promise~void~
+        +revokeAllUserTokens(userId: String) Promise~void~
+    }
+
+    class EmailService {
+        +sendPasswordResetEmail(email: String, resetToken: String) Promise~void~
+        +sendWelcomeEmail(email: String) Promise~void~
+    }
+
+    class MembershipService {
+        +getMembership(userId: String) Promise~Membership|null~
+        +createCheckoutSession(userId: String, planType: PlanType, userEmail: String) Promise~CheckoutResult~
+        +handleCheckoutComplete(session: Object) Promise~void~
+        +handleSubscriptionUpdated(subscription: Object) Promise~void~
+        +handleSubscriptionDeleted(subscription: Object) Promise~void~
+        +handleInvoicePaymentFailed(invoice: Object) Promise~void~
+        +createPortalSession(userId: String) Promise~PortalResult~
+        +upsertMembershipFromCheckout(session: Object) Promise~Membership~
+    }
+
+    class StripeService {
+        +createSubscriptionCheckout(priceId: String, customerId: String, successUrl: String, cancelUrl: String) Promise~Object~
+        +createPaymentCheckout(priceId: String, customerId: String, successUrl: String, cancelUrl: String) Promise~Object~
+        +createCustomer(email: String) Promise~Object~
+        +createPortalSession(customerId: String, returnUrl: String) Promise~Object~
+        +verifyWebhookSignature(payload: String, sig: String) Object
+    }
+
+    class AuthMiddleware {
+        +authenticate(req: Request, res: Response, next: NextFunction) void
+    }
+
+    class ValidateMiddleware {
+        +validate(schema: ZodSchema)(req: Request, res: Response, next: NextFunction) void
+    }
+
+    class AuthRoute {
+        +POST /register
+        +POST /login
+        +POST /logout
+        +POST /refresh
+        +POST /forgot-password
+        +POST /reset-password
+        +GET /me
+    }
+
+    class MembershipRoute {
+        +GET /membership
+        +POST /checkout
+        +GET /portal
+    }
+
+    class StripeWebhookRoute {
+        +POST /webhook
+    }
+
+    class AppError {
+        +number statusCode
+        +number code
+        +string message
+    }
+
+    User "1" --o "many" RefreshToken : has
+    User "1" --o "many" PasswordReset : has
+    User "1" --> "0..1" Membership : has
+    Membership --> PlanType : planType
+    Membership --> MembershipStatus : status
+    AuthService --> TokenService : uses
+    AuthService --> EmailService : uses
+    AuthService --> User : manages
+    MembershipService --> StripeService : uses
+    MembershipService --> Membership : manages
+    MembershipRoute --> MembershipService : delegates
+    MembershipRoute --> ValidateMiddleware : validates
+    MembershipRoute --> AuthMiddleware : authenticates
+    StripeWebhookRoute --> MembershipService : delegates
+    AuthRoute --> AuthService : delegates
+    AuthRoute --> ValidateMiddleware : validates
+    AuthMiddleware --> TokenService : verifies

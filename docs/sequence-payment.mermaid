@@ -1,0 +1,30 @@
+sequenceDiagram
+    actor User
+    participant Web as 官网 /pricing
+    participant API as 后端 API
+    participant StripeSvc as StripeService
+    participant Stripe as Stripe API
+    participant DB as PostgreSQL
+
+    User->>Web: 点击"月付$3"按钮
+    Web->>API: POST /api/membership/checkout { planType: "MONTHLY" }
+    API->>API: authenticate 中间件验证 JWT
+    API->>DB: 查询用户是否已有 Membership
+    alt 已有 ACTIVE 会员
+        API-->>Web: { code: 400, message: '您已有有效会员' }
+    else 无会员或已过期
+        API->>StripeSvc: createSubscriptionCheckout(priceId, customerId, successUrl, cancelUrl)
+        alt 无 stripeCustomerId
+            StripeSvc->>Stripe: 创建 Customer
+            Stripe-->>StripeSvc: customerId
+            StripeSvc->>DB: 更新 Membership.stripeCustomerId
+        end
+        StripeSvc->>Stripe: 创建 Checkout Session (mode=subscription)
+        Stripe-->>StripeSvc: { url: checkout_url }
+        StripeSvc-->>API: CheckoutResult { url }
+        API-->>Web: { code: 200, data: { url: checkout_url } }
+        Web->>User: window.location.href = checkout_url
+        User->>Stripe: 完成支付
+        Stripe->>User: 重定向到 /account?payment=success
+        Stripe->>API: POST /api/stripe/webhook (checkout.session.completed)
+    end

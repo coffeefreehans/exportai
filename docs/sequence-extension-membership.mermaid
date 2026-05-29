@@ -1,0 +1,38 @@
+sequenceDiagram
+    actor User
+    participant Content as content.js
+    participant BG as background.js
+    participant API as 后端 API
+    participant Storage as chrome.storage.local
+
+    Note over BG: 扩展启动 / 30分钟定时器触发
+    BG->>Storage: 读取 exportai_access_token
+    alt 无 Token
+        BG->>Storage: 写入 { isMember: false }
+    else 有 Token
+        BG->>API: GET /api/membership (Bearer token)
+        API-->>BG: { data: { isMember, planType, expiresAt } }
+        BG->>Storage: 更新 exportai_membership 缓存
+        BG->>Content: 广播 MEMBERSHIP_UPDATED
+    end
+
+    Note over User: 用户点击 FAB
+    User->>Content: 点击浮动按钮
+    Content->>BG: CHECK_MEMBERSHIP
+    BG->>Storage: 读取 exportai_membership
+    Storage-->>BG: { isMember, ... }
+    BG-->>Content: { isMember: true/false, planType, expiresAt }
+    
+    alt isMember = true
+        Content->>Content: 正常展示 FAB 面板
+    else isMember = false
+        Content->>Content: 显示🔒+升级弹窗
+        User->>Content: 点击"升级"
+        Content->>Content: chrome.tabs.create({ url: WEB_URL + '/pricing' })
+    end
+
+    Note over User: 自动导出触发
+    Content->>Content: MutationObserver 检测变化
+    Content->>BG: CHECK_MEMBERSHIP
+    BG-->>Content: { isMember: false }
+    Content->>Content: 跳过自动导出（静默）

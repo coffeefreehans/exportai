@@ -60,61 +60,50 @@ function Draw-Background($g, $w, $h) {
 
 function Draw-Logo($g, $x, $y, $s, $label = $false) {
   Fill-RoundRect $g ([System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(55, 0, 0, 0))) ($x + $s * 0.06) ($y + $s * 0.08) ($s * 0.9) ($s * 0.86) ($s * 0.22)
-  $grad = [System.Drawing.Drawing2D.LinearGradientBrush]::new([System.Drawing.RectangleF]::new($x, $y, $s, $s), (Color "#020617"), (Color "#312e81"), 45)
+  $grad = [System.Drawing.Drawing2D.LinearGradientBrush]::new([System.Drawing.RectangleF]::new($x, $y, $s, $s), (Color "#061826"), (Color "#0f766e"), 45)
   Fill-RoundRect $g $grad $x $y $s $s ($s * 0.2)
   $grad.Dispose()
 
-  $streamPen1 = Pen "#38bdf8" ([Math]::Max(1, $s * 0.035))
-  $streamPen1.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
-  $streamPen1.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-  $streamPen2 = Pen "#fbbf24" ([Math]::Max(1, $s * 0.03))
-  $streamPen2.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
-  $streamPen2.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-  $g.DrawBezier($streamPen1, ($x + $s * 0.17), ($y + $s * 0.35), ($x + $s * 0.32), ($y + $s * 0.3), ($x + $s * 0.37), ($y + $s * 0.45), ($x + $s * 0.48), ($y + $s * 0.5))
-  $g.DrawBezier($streamPen2, ($x + $s * 0.16), ($y + $s * 0.52), ($x + $s * 0.32), ($y + $s * 0.56), ($x + $s * 0.36), ($y + $s * 0.47), ($x + $s * 0.48), ($y + $s * 0.5))
-  $g.DrawBezier($streamPen1, ($x + $s * 0.2), ($y + $s * 0.68), ($x + $s * 0.34), ($y + $s * 0.62), ($x + $s * 0.39), ($y + $s * 0.55), ($x + $s * 0.48), ($y + $s * 0.5))
-  $streamPen1.Dispose(); $streamPen2.Dispose()
+  $halo = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(48, 94, 234, 212))
+  $g.FillEllipse($halo, ($x + $s * 0.19), ($y + $s * 0.18), ($s * 0.62), ($s * 0.62))
+  $halo.Dispose()
 
-  $prismShadow = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(50, 0, 0, 0))
-  $g.FillEllipse($prismShadow, ($x + $s * 0.36), ($y + $s * 0.34), ($s * 0.38), ($s * 0.38))
-  $prismShadow.Dispose()
+  $nodeBrush = Brush "#facc15"
+  $g.FillEllipse($nodeBrush, ($x + $s * 0.22), ($y + $s * 0.28), ($s * 0.08), ($s * 0.08))
+  $g.FillEllipse($nodeBrush, ($x + $s * 0.72), ($y + $s * 0.33), ($s * 0.07), ($s * 0.07))
+  $g.FillEllipse($nodeBrush, ($x + $s * 0.31), ($y + $s * 0.72), ($s * 0.065), ($s * 0.065))
+  $nodeBrush.Dispose()
 
-  $top = [System.Drawing.Drawing2D.GraphicsPath]::new()
-  $top.AddPolygon(@(
-    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.2)),
-    [System.Drawing.PointF]::new(($x + $s * 0.72), ($y + $s * 0.5)),
-    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.8)),
-    [System.Drawing.PointF]::new(($x + $s * 0.28), ($y + $s * 0.5))
-  ))
-  $g.FillPath((Brush "#e0f2fe"), $top)
-  $top.Dispose()
+  $linkPen = Pen "#5eead4" ([Math]::Max(1, $s * 0.025))
+  $linkPen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
+  $linkPen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
+  $g.DrawLine($linkPen, ($x + $s * 0.28), ($y + $s * 0.32), ($x + $s * 0.46), ($y + $s * 0.44))
+  $g.DrawLine($linkPen, ($x + $s * 0.72), ($y + $s * 0.38), ($x + $s * 0.58), ($y + $s * 0.45))
+  $g.DrawLine($linkPen, ($x + $s * 0.36), ($y + $s * 0.72), ($x + $s * 0.46), ($y + $s * 0.6))
+  $linkPen.Dispose()
 
-  $left = [System.Drawing.Drawing2D.GraphicsPath]::new()
-  $left.AddPolygon(@(
-    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.2)),
-    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.8)),
-    [System.Drawing.PointF]::new(($x + $s * 0.28), ($y + $s * 0.5))
-  ))
-  $g.FillPath((Brush "#67e8f9"), $left)
-  $left.Dispose()
+  $capsuleShadow = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(55, 0, 0, 0))
+  Fill-RoundRect $g $capsuleShadow ($x + $s * 0.34) ($y + $s * 0.23) ($s * 0.38) ($s * 0.58) ($s * 0.19)
+  $capsuleShadow.Dispose()
 
-  $right = [System.Drawing.Drawing2D.GraphicsPath]::new()
-  $right.AddPolygon(@(
-    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.2)),
-    [System.Drawing.PointF]::new(($x + $s * 0.72), ($y + $s * 0.5)),
-    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.8))
-  ))
-  $g.FillPath((Brush "#a78bfa"), $right)
-  $right.Dispose()
+  $capGrad = [System.Drawing.Drawing2D.LinearGradientBrush]::new(
+    [System.Drawing.RectangleF]::new(($x + $s * 0.31), ($y + $s * 0.2), ($s * 0.38), ($s * 0.58)),
+    (Color "#f8fafc"),
+    (Color "#bfdbfe"),
+    90
+  )
+  Fill-RoundRect $g $capGrad ($x + $s * 0.31) ($y + $s * 0.2) ($s * 0.38) ($s * 0.58) ($s * 0.19)
+  $capGrad.Dispose()
 
-  $shine = Pen "#ffffff" ([Math]::Max(1, $s * 0.025))
-  $shine.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
-  $shine.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
-  $g.DrawLine($shine, ($x + $s * 0.42), ($y + $s * 0.38), ($x + $s * 0.5), ($y + $s * 0.25))
-  $shine.Dispose()
+  Fill-RoundRect $g (Brush "#0f766e") ($x + $s * 0.39) ($y + $s * 0.34) ($s * 0.22) ($s * 0.06) ($s * 0.03)
+  Fill-RoundRect $g (Brush "#6366f1") ($x + $s * 0.39) ($y + $s * 0.47) ($s * 0.18) ($s * 0.06) ($s * 0.03)
+  Fill-RoundRect $g (Brush "#f59e0b") ($x + $s * 0.39) ($y + $s * 0.6) ($s * 0.25) ($s * 0.06) ($s * 0.03)
 
-  Fill-RoundRect $g (Brush "#fbbf24") ($x + $s * 0.69) ($y + $s * 0.58) ($s * 0.18) ($s * 0.13) ($s * 0.065)
-  Fill-RoundRect $g (Brush "#fde68a") ($x + $s * 0.74) ($y + $s * 0.61) ($s * 0.18) ($s * 0.13) ($s * 0.065)
+  $glint = Pen "#ffffff" ([Math]::Max(1, $s * 0.03))
+  $glint.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
+  $glint.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
+  $g.DrawLine($glint, ($x + $s * 0.39), ($y + $s * 0.26), ($x + $s * 0.34), ($y + $s * 0.39))
+  $glint.Dispose()
 }
 
 function Generate-Icon($size, $path) {
@@ -223,17 +212,18 @@ Generate-Icon 512 (Join-Path $iconDir "exportai-icon-512.png")
 
 $svg = @'
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <defs><linearGradient id="g" x1="18" y1="16" x2="110" y2="112"><stop stop-color="#020617"/><stop offset="1" stop-color="#312E81"/></linearGradient></defs>
+  <defs><linearGradient id="g" x1="18" y1="16" x2="110" y2="112"><stop stop-color="#061826"/><stop offset="1" stop-color="#0F766E"/></linearGradient><linearGradient id="c" x1="43" y1="30" x2="84" y2="99" gradientUnits="userSpaceOnUse"><stop stop-color="#F8FAFC"/><stop offset="1" stop-color="#BFDBFE"/></linearGradient></defs>
   <rect x="16" y="16" width="96" height="96" rx="22" fill="url(#g)"/>
-  <path d="M30 45c17-8 28 2 40 12" fill="none" stroke="#38BDF8" stroke-width="5" stroke-linecap="round"/>
-  <path d="M29 66c17 4 27-4 41-9" fill="none" stroke="#FBBF24" stroke-width="4" stroke-linecap="round"/>
-  <path d="M34 83c16-7 27-13 36-26" fill="none" stroke="#38BDF8" stroke-width="5" stroke-linecap="round"/>
-  <path d="M64 30 91 64 64 98 37 64Z" fill="#E0F2FE"/>
-  <path d="M64 30v68L37 64Z" fill="#67E8F9"/>
-  <path d="M64 30 91 64 64 98Z" fill="#A78BFA"/>
-  <path d="M55 50 64 34" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
-  <rect x="87" y="76" width="23" height="16" rx="8" fill="#FBBF24"/>
-  <rect x="93" y="81" width="23" height="16" rx="8" fill="#FDE68A"/>
+  <circle cx="64" cy="64" r="37" fill="#5EEAD4" opacity=".18"/>
+  <path d="M39 43 58 55M93 49 75 57M47 94 58 78" stroke="#5EEAD4" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="37" cy="41" r="5" fill="#FACC15"/>
+  <circle cx="92" cy="48" r="5" fill="#FACC15"/>
+  <circle cx="46" cy="93" r="4" fill="#FACC15"/>
+  <rect x="45" y="31" width="38" height="70" rx="19" fill="url(#c)"/>
+  <rect x="54" y="48" width="22" height="7" rx="3.5" fill="#0F766E"/>
+  <rect x="54" y="63" width="18" height="7" rx="3.5" fill="#6366F1"/>
+  <rect x="54" y="78" width="25" height="7" rx="3.5" fill="#F59E0B"/>
+  <path d="M54 38 49 53" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
 </svg>
 '@
 Set-Content -Path (Join-Path $extensionIconDir "icon.svg") -Value $svg -Encoding UTF8

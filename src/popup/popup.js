@@ -7,7 +7,7 @@
     EXPORT_FORMATS
   } = root.constants;
 
-  const WEB_URL = "http://www.exportai.followaigc.com";
+  const WEB_URL = "https://www.exportai.followaigc.com";
   const FS_DIRECTORY_DB_NAME = "exportai-file-system-access";
   const FS_DIRECTORY_STORE_NAME = "handles";
   const FS_DIRECTORY_HANDLE_KEY = "lastDownloadDirectory";

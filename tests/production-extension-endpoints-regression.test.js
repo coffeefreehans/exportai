@@ -9,16 +9,16 @@ const background = fs.readFileSync(path.join(root, 'src', 'background', 'backgro
 const compose = fs.readFileSync(path.join(root, 'docker-compose.yml'), 'utf8');
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
 
-assert(popup.includes('const WEB_URL = "http://www.exportai.followaigc.com";'), 'popup should open the production web account/pricing URL');
-assert(options.includes('const WEB_URL = "http://www.exportai.followaigc.com";'), 'options should open the production web account URL');
-assert(background.includes('const API_BASE = "http://www.exportai.followaigc.com";'), 'background API calls should use the production API origin');
-assert(compose.includes('WEB_URL=${WEB_URL:-http://www.exportai.followaigc.com}'), 'release compose should default to the production web URL');
+assert(popup.includes('const WEB_URL = "https://www.exportai.followaigc.com";'), 'popup should open the production web account/pricing URL');
+assert(options.includes('const WEB_URL = "https://www.exportai.followaigc.com";'), 'options should open the production web account URL');
+assert(background.includes('const API_BASE = "https://www.exportai.followaigc.com";'), 'background API calls should use the production API origin');
+assert(compose.includes('WEB_URL=${WEB_URL:-https://www.exportai.followaigc.com}'), 'release compose should default to the production web URL');
 
-assert(manifest.host_permissions.includes('http://www.exportai.followaigc.com/*'), 'manifest should allow production API host permissions');
+assert(manifest.host_permissions.includes('https://www.exportai.followaigc.com/*'), 'manifest should allow production API host permissions');
 assert(
   manifest.content_scripts.some((script) =>
     script.js.includes('src/shared/web-auth-bridge.js') &&
-    script.matches.includes('http://www.exportai.followaigc.com/*')
+    script.matches.includes('https://www.exportai.followaigc.com/*')
   ),
   'web auth bridge should run on the production web app'
 );

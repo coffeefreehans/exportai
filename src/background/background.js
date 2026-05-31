@@ -24,7 +24,7 @@
   const MSG_PDF_TAB_HTML_READY = "CHAT_EXPORT_AI_PDF_TAB_HTML_READY";
 
   const PDF_RENDER_TAB_PATH = "src/background/pdf-render-tab.html";
-  const API_BASE = "http://www.exportai.followaigc.com";
+  const API_BASE = "https://www.exportai.followaigc.com";
   const MEMBERSHIP_STORAGE_KEY = "exportai_membership";
   const FS_DIRECTORY_DB_NAME = "exportai-file-system-access";
   const FS_DIRECTORY_STORE_NAME = "handles";

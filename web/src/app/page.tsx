@@ -8,6 +8,7 @@ import Testimonials from '@/components/Testimonials';
 import FAQ from '@/components/FAQ';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/lib/i18n';
+import { useBrowserExtensionInstallUrl } from '@/lib/extension-store';
 
 const COPY = {
   zh: {
@@ -26,6 +27,7 @@ const COPY = {
 
 export default function HomePage() {
   const { language } = useLanguage();
+  const installUrl = useBrowserExtensionInstallUrl();
   const copy = COPY[language];
 
   return (
@@ -50,7 +52,7 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a
-                  href="https://chromewebstore.google.com"
+                  href={installUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl hover:from-primary-hover hover:to-secondary-hover transition shadow-lg shadow-primary/25"

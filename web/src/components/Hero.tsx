@@ -1,6 +1,7 @@
 'use client';
 
 import { useLanguage } from '@/lib/i18n';
+import { useBrowserExtensionInstallUrl } from '@/lib/extension-store';
 
 const COPY = {
   zh: {
@@ -34,6 +35,7 @@ const COPY = {
 export default function Hero() {
   const formats = ['TXT', 'PDF', 'MHT', 'HTML', 'MD', 'DOCX', 'XLSX', 'PNG'];
   const { language } = useLanguage();
+  const installUrl = useBrowserExtensionInstallUrl();
   const copy = COPY[language];
 
   return (
@@ -61,7 +63,7 @@ export default function Hero() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
-            href="https://chromewebstore.google.com"
+            href={installUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl hover:from-primary-hover hover:to-secondary-hover transition shadow-lg shadow-primary/25"

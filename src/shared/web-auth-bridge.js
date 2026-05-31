@@ -51,6 +51,10 @@
     }
   }
 
+  function isProtectedWebPath(pathname) {
+    return pathname === "/account" || pathname.startsWith("/account/");
+  }
+
   function setLocalFromRemote(values) {
     applyingRemote = true;
     try {
@@ -133,7 +137,7 @@
           return;
         }
         clearLocalAuth();
-        if (!location.pathname.includes("/login")) {
+        if (isProtectedWebPath(location.pathname)) {
           navigateTo("/login");
         }
       }
@@ -149,7 +153,7 @@
         return;
       }
       clearLocalAuth();
-      if (!location.pathname.includes("/login")) {
+      if (isProtectedWebPath(location.pathname)) {
         navigateTo("/login");
       }
       return;

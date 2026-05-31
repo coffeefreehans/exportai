@@ -18,5 +18,11 @@ assert(
   bridge.includes('changes[AUTH_LOGOUT_KEY]?.newValue') && bridge.includes('if (hasLocalAuth())'),
   'web auth bridge remote logout handling must ignore stale logout marker when local auth exists'
 );
+assert(
+  bridge.includes('function isProtectedWebPath') &&
+    bridge.includes('isProtectedWebPath(location.pathname)') &&
+    bridge.includes('pathname === "/account" || pathname.startsWith("/account/")'),
+  'web auth bridge logout handling must only redirect protected account pages to login'
+);
 
 console.log('auth logout marker regression passed');

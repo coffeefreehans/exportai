@@ -9,7 +9,11 @@ COPY . .
 
 # Build-time environment variable for Next.js public runtime config
 ARG NEXT_PUBLIC_API_URL=http://localhost:4000
+ARG NEXT_PUBLIC_CHROME_EXTENSION_URL=https://chromewebstore.google.com
+ARG NEXT_PUBLIC_EDGE_EXTENSION_URL=https://microsoftedge.microsoft.com/addons
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_CHROME_EXTENSION_URL=$NEXT_PUBLIC_CHROME_EXTENSION_URL
+ENV NEXT_PUBLIC_EDGE_EXTENSION_URL=$NEXT_PUBLIC_EDGE_EXTENSION_URL
 
 RUN npm run build
 

@@ -10,6 +10,8 @@ assert(fs.existsSync(routerPath), 'web app must define a shared extension store 
 const router = fs.readFileSync(routerPath, 'utf8');
 const hero = fs.readFileSync(path.join(root, 'web', 'src', 'components', 'Hero.tsx'), 'utf8');
 const page = fs.readFileSync(path.join(root, 'web', 'src', 'app', 'page.tsx'), 'utf8');
+const compose = fs.readFileSync(path.join(root, 'docker-compose.yml'), 'utf8');
+const envExample = fs.readFileSync(path.join(root, '.env.example'), 'utf8');
 
 assert(router.includes('Edg/'), 'router must detect Microsoft Edge user agents');
 assert(router.includes('microsoftedge.microsoft.com'), 'router must include an Edge Add-ons URL');
@@ -27,6 +29,14 @@ assert(
 assert(
   page.includes('useBrowserExtensionInstallUrl') && !page.includes('href="https://chromewebstore.google.com"'),
   'Homepage CTA install button must use browser-aware store routing'
+);
+assert(
+  compose.includes('NEXT_PUBLIC_CHROME_EXTENSION_URL') && compose.includes('NEXT_PUBLIC_EDGE_EXTENSION_URL'),
+  'Docker web build must pass browser store URLs into Next.js'
+);
+assert(
+  envExample.includes('NEXT_PUBLIC_CHROME_EXTENSION_URL') && envExample.includes('NEXT_PUBLIC_EDGE_EXTENSION_URL'),
+  '.env.example must document browser store URL variables'
 );
 
 console.log('web extension store routing regression passed');

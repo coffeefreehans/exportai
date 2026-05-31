@@ -1,18 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <!-- 圆角背景 -->
-  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
-  <!-- 箭头/导出图标 -->
-  <g transform="translate(24,24)">
-    <!-- 方框 -->
-    <rect x="8" y="8" width="64" height="64" rx="8" fill="none" stroke="white" stroke-width="5"/>
-    <!-- 箭头 -->
-    <path d="M72 40 L96 40 L96 64" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-    <polygon points="88,24 104,40 88,56" fill="none" stroke="white" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" transform="translate(-8,0)"/>
-  </g>
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs><linearGradient id="g" x1="20" y1="16" x2="108" y2="112"><stop stop-color="#2F6DF6"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs>
+  <rect x="16" y="16" width="96" height="96" rx="22" fill="url(#g)"/>
+  <rect x="40" y="34" width="48" height="52" rx="6" fill="white"/>
+  <rect x="48" y="47" width="32" height="6" rx="3" fill="#DBEAFE"/>
+  <rect x="48" y="61" width="26" height="6" rx="3" fill="#DBEAFE"/>
+  <path d="M64 50v25m0 0L52 63m12 12 12-12" stroke="#102A63" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="64" y="101" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" fill="white">AI</text>
 </svg>

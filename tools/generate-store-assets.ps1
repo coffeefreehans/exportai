@@ -2,6 +2,7 @@ Add-Type -AssemblyName System.Drawing
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
+$sourceIconPath = Join-Path $root "store-assets/source/exportai-source-icon.png"
 $assets = Join-Path $root "store-assets"
 $iconDir = Join-Path $assets "icons"
 $promoDir = Join-Path $assets "promo"
@@ -9,7 +10,7 @@ $enDir = Join-Path $assets "screenshots/en-US"
 $zhDir = Join-Path $assets "screenshots/zh-CN"
 $listingDir = Join-Path $assets "listing"
 $extensionIconDir = Join-Path $root "icons"
-New-Item -ItemType Directory -Force -Path $iconDir, $promoDir, $enDir, $zhDir, $listingDir, $extensionIconDir | Out-Null
+New-Item -ItemType Directory -Force -Path $iconDir, $promoDir, $enDir, $zhDir, $listingDir, $extensionIconDir, (Join-Path $assets "source") | Out-Null
 
 function New-Canvas($w, $h) {
   $bitmap = [System.Drawing.Bitmap]::new($w, $h, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
@@ -24,6 +25,19 @@ function Brush($hex) { [System.Drawing.SolidBrush]::new((Color $hex)) }
 function Pen($hex, $width = 1) { [System.Drawing.Pen]::new((Color $hex), $width) }
 function FontObj($size, $style = "Regular") { [System.Drawing.Font]::new("Segoe UI", $size, [System.Drawing.FontStyle]::$style, [System.Drawing.GraphicsUnit]::Pixel) }
 function Save-Png($bitmap, $path) { $bitmap.Save($path, [System.Drawing.Imaging.ImageFormat]::Png) }
+
+function Draw-ImageIcon($g, $x, $y, $s) {
+  if (-not (Test-Path $sourceIconPath)) {
+    Draw-Logo $g $x $y $s $true
+    return
+  }
+  $source = [System.Drawing.Bitmap]::new($sourceIconPath)
+  try {
+    $g.DrawImage($source, [System.Drawing.RectangleF]::new($x, $y, $s, $s))
+  } finally {
+    $source.Dispose()
+  }
+}
 
 function Fill-RoundRect($g, $brush, $x, $y, $w, $h, $r) {
   $p = [System.Drawing.Drawing2D.GraphicsPath]::new()
@@ -180,7 +194,7 @@ function Screenshot($path, $headline, $subhead, $variant) {
     }
   } else {
     Draw-Chat $g 520 210 680 430
-    Draw-Logo $g 150 260 220 $true
+    Draw-ImageIcon $g 150 260 220
     $g.DrawString("Floating export panel", (FontObj 36 "Bold"), (Brush "#ffffff"), 110, 510)
     $g.DrawString("Members can export directly from the chat page.", (FontObj 22), (Brush "#bfd0e8"), 112, 565)
   }
@@ -195,9 +209,9 @@ function Promo($path, $w, $h, $text) {
   if ($text) {
     $g.DrawString("ExportAI", (FontObj ([Math]::Round($h * 0.13)) "Bold"), (Brush "#ffffff"), ($w * 0.08), ($h * 0.2))
     $g.DrawString("Save AI conversations cleanly", (FontObj ([Math]::Round($h * 0.055))), (Brush "#c8d7f0"), ($w * 0.08), ($h * 0.38))
-    Draw-Logo $g ($w * 0.68) ($h * 0.2) ($h * 0.56) $true
+    Draw-ImageIcon $g ($w * 0.68) ($h * 0.2) ($h * 0.56)
   } else {
-    Draw-Logo $g (($w - $h * 0.55) / 2) ($h * 0.22) ($h * 0.55) $true
+    Draw-ImageIcon $g (($w - $h * 0.55) / 2) ($h * 0.22) ($h * 0.55)
   }
   Save-Png $b $path
   $g.Dispose(); $b.Dispose()

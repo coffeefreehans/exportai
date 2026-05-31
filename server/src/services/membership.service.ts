@@ -258,6 +258,80 @@ export const MembershipService = {
   },
 
   /**
+   * Fallback sync used by the account success page.
+   * Webhooks remain the source of truth, but local development can miss them
+   * when Stripe CLI listen is not running. This verifies the session with
+   * Stripe before activating membership.
+   */
+  async syncCheckoutSession(userId: string, sessionId: string) {
+    ensureStripeConfigured();
+
+    if (!sessionId.startsWith('cs_')) {
+      throw new AppError(400, 'Invalid checkout session id');
+    }
+
+    const session = await StripeService.retrieveCheckoutSession(sessionId);
+    if (session.payment_status !== 'paid') {
+      throw new AppError(409, 'Checkout session is not paid');
+    }
+
+    const membership = await prisma.membership.findUnique({
+      where: { userId },
+    });
+
+    if (!membership) {
+      throw new AppError(404, 'Membership record not found');
+    }
+
+    const stripeCustomerId = typeof session.customer === 'string'
+      ? session.customer
+      : session.customer?.id;
+
+    if (!stripeCustomerId || stripeCustomerId !== membership.stripeCustomerId) {
+      throw new AppError(403, 'Checkout session does not belong to this account');
+    }
+
+    let planType = session.metadata?.planType as PlanType | undefined;
+    if (!planType || !['MONTHLY', 'YEARLY', 'LIFETIME'].includes(planType)) {
+      planType = membership.planType || (session.mode === 'payment' ? 'LIFETIME' : 'MONTHLY');
+    }
+
+    const subscription = typeof session.subscription === 'object' && session.subscription
+      ? session.subscription
+      : null;
+    const paymentIntent = typeof session.payment_intent === 'object' && session.payment_intent
+      ? session.payment_intent
+      : null;
+    const stripeSubscriptionId = typeof session.subscription === 'string'
+      ? session.subscription
+      : subscription?.id || null;
+    const stripePaymentIntentId = typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : paymentIntent?.id || null;
+
+    const currentPeriodEnd = subscription && 'current_period_end' in subscription
+      ? Number((subscription as any).current_period_end)
+      : 0;
+    const expiresAt = currentPeriodEnd
+      ? new Date(currentPeriodEnd * 1000)
+      : computeExpiresAt(planType);
+
+    await prisma.membership.update({
+      where: { id: membership.id },
+      data: {
+        planType,
+        status: 'ACTIVE',
+        stripeSubscriptionId,
+        stripePaymentIntentId,
+        expiresAt,
+        cancelledAt: null,
+      },
+    });
+
+    return this.getMembership(userId);
+  },
+
+  /**
    * Handle customer.subscription.updated webhook event.
    */
   async handleSubscriptionUpdated(

@@ -20,8 +20,20 @@ assert(
   'popup should define free format gating helpers'
 );
 assert(
-  popup.includes('data-paid-only="true"') && popupCss.includes('format-option.is-disabled'),
-  'popup should visibly disable paid-only formats for free users'
+  popup.includes('data-paid-only="true"') && popup.includes('openUrl(`${WEB_URL}/#pricing`)'),
+  'popup should make paid-only formats clickable and route free users to pricing'
+);
+assert(
+  popup.includes('is-locked') && popupCss.includes('format-option.is-locked'),
+  'popup should visibly lock paid-only formats for free users'
+);
+assert(
+  popup.includes('lock-mark') && popupCss.includes('.lock-mark'),
+  'locked popup formats should show a lock marker'
+);
+assert(
+  !popup.includes(' disabled"'),
+  'paid-only popup format inputs should not be disabled because clicks must open pricing'
 );
 assert(
   content.includes('FREE_EXPORT_FORMATS') && content.includes('assertAllowedFormatsForMembership'),

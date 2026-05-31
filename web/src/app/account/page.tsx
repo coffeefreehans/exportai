@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getMembership, createPortalSession, isLoggedIn } from '@/lib/api';
+import { getMembership, syncCheckoutSession, createPortalSession, isLoggedIn } from '@/lib/api';
 import Navbar from '@/components/Navbar';
 import MembershipStatus from '@/components/MembershipStatus';
 
@@ -55,17 +55,30 @@ function AccountContent() {
 
   useEffect(() => {
     if (!isLoggedIn()) return;
-    fetchMembership();
-  }, []);
+    const sessionId = searchParams.get('payment') === 'success'
+      ? searchParams.get('session_id')
+      : null;
+    fetchMembership(sessionId);
+  }, [searchParams]);
 
-  const fetchMembership = async () => {
+  const fetchMembership = async (sessionId?: string | null) => {
+    setLoading(true);
     try {
-      const result = await getMembership();
+      const result = sessionId
+        ? await syncCheckoutSession(sessionId)
+        : await getMembership();
       if (result.data) {
         setMembership(result.data);
       }
     } catch {
-      // Silently handle error
+      try {
+        const fallback = await getMembership();
+        if (fallback.data) {
+          setMembership(fallback.data);
+        }
+      } catch {
+        // Silently handle error
+      }
     } finally {
       setLoading(false);
     }

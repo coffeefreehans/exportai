@@ -7,7 +7,7 @@
     EXPORT_FORMATS
   } = root.constants;
 
-  const WEB_URL = "http://localhost:3002";
+  const WEB_URL = "http://www.exportai.followaigc.com";
   const FS_DIRECTORY_DB_NAME = "exportai-file-system-access";
   const FS_DIRECTORY_STORE_NAME = "handles";
   const FS_DIRECTORY_HANDLE_KEY = "lastDownloadDirectory";
@@ -228,12 +228,12 @@
   function renderFormatOptions(settings) {
     const selected = new Set(normalizePopupSelectedFormats(settings.popupSelectedFormats));
     formatOptionsNode.innerHTML = FORMAT_OPTIONS.map(([format, label]) => {
-      const disabled = !isFormatAllowedForMembership(format);
-      const checked = !disabled && selected.has(format) ? " checked" : "";
-      const disabledAttr = disabled ? " disabled" : "";
-      const paidOnlyAttr = disabled ? ' data-paid-only="true"' : "";
-      const disabledClass = disabled ? " is-disabled" : "";
-      return `<label class="format-option${disabledClass}"${paidOnlyAttr} title="${disabled ? t("paidFormatUnavailable") : ""}"><input type="checkbox" value="${format}"${checked}${disabledAttr}><span>${label}</span></label>`;
+      const locked = !isFormatAllowedForMembership(format);
+      const checked = !locked && selected.has(format) ? " checked" : "";
+      const paidOnlyAttr = locked ? ' data-paid-only="true"' : "";
+      const lockedClass = locked ? " is-locked" : "";
+      const lockMarkup = locked ? '<span class="lock-mark" aria-hidden="true">🔒</span>' : "";
+      return `<label class="format-option${lockedClass}"${paidOnlyAttr} title="${locked ? t("paidFormatUnavailable") : ""}"><input type="checkbox" value="${format}"${checked}><span>${label}</span>${lockMarkup}</label>`;
     }).join("");
   }
 
@@ -389,7 +389,25 @@
     }
     openUrl(globalThis.chrome.runtime.getURL("src/options/options.html"));
   });
-  formatOptionsNode.addEventListener("change", saveSelectedFormats);
+  formatOptionsNode.addEventListener("click", (event) => {
+    const option = event.target?.closest?.(".format-option");
+    if (!option || !option.dataset.paidOnly) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    openUrl(`${WEB_URL}/#pricing`);
+  });
+  formatOptionsNode.addEventListener("change", (event) => {
+    const option = event.target?.closest?.(".format-option");
+    if (option?.dataset.paidOnly) {
+      const input = option.querySelector("input");
+      if (input) input.checked = false;
+      return;
+    }
+    saveSelectedFormats();
+  });
   exportButton.addEventListener("click", runExport);
 
   loadPopup().catch((error) => {

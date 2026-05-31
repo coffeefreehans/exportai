@@ -31,6 +31,15 @@ interface TokenData {
   refreshToken: string;
 }
 
+interface MembershipData {
+  id: string | null;
+  planType: string | null;
+  status: string | null;
+  expiresAt: string | null;
+  cancelledAt: string | null;
+  isMember: boolean;
+}
+
 /**
  * Make an API request with automatic token refresh on 401.
  */
@@ -259,6 +268,20 @@ export async function getMembership(): Promise<ApiResponse<{
     isMember: boolean;
   }>('/api/membership', {
     method: 'GET',
+  });
+  if (result.data) {
+    syncMembershipToChromeStorage(result.data);
+  }
+  return result;
+}
+
+/**
+ * Verify a successful Stripe Checkout Session and sync membership status.
+ */
+export async function syncCheckoutSession(sessionId: string): Promise<ApiResponse<MembershipData>> {
+  const result = await apiRequest<MembershipData>('/api/membership/sync-checkout-session', {
+    method: 'POST',
+    body: JSON.stringify({ sessionId }),
   });
   if (result.data) {
     syncMembershipToChromeStorage(result.data);

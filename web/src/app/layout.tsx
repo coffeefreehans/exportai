@@ -1,8 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'ExportAI - 一键导出 AI 对话',
@@ -45,7 +42,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: EXT_TOKEN_HANDLER }} />
       </head>
-      <body className={`${inter.className} bg-background text-foreground antialiased`}>
+      <body className="bg-background text-foreground antialiased">
         {children}
       </body>
     </html>

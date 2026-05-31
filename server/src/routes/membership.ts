@@ -63,4 +63,20 @@ router.get('/portal', authenticate, async (req: Request, res: Response) => {
   });
 });
 
+/**
+ * POST /api/membership/sync-checkout-session — Verify a paid Stripe Checkout
+ * Session after returning from Stripe and update local membership state.
+ */
+router.post('/sync-checkout-session', authenticate, async (req: Request, res: Response) => {
+  const userId = (req as any).user.id;
+  const sessionId = String(req.body?.sessionId || '').trim();
+  const membership = await MembershipService.syncCheckoutSession(userId, sessionId);
+
+  res.status(200).json({
+    code: 200,
+    data: membership,
+    message: 'ok',
+  });
+});
+
 export default router;

@@ -137,15 +137,25 @@ h1 {
   color: #1e3a8a;
 }
 
-.format-option.is-disabled {
-  cursor: not-allowed;
+.format-option.is-locked {
+  position: relative;
+  cursor: pointer;
   opacity: 0.45;
   background: #f1f5f9;
   color: #64748b;
 }
 
-.format-option.is-disabled span {
+.format-option.is-locked span:not(.lock-mark) {
   text-decoration: line-through;
+}
+
+.lock-mark {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  font-size: 10px;
+  line-height: 1;
+  text-decoration: none;
 }
 
 .primary-button {

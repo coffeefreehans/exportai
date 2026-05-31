@@ -103,6 +103,15 @@ export const StripeService = {
   },
 
   /**
+   * Retrieve a Checkout Session from Stripe after success redirect.
+   */
+  retrieveCheckoutSession(sessionId: string): Promise<Stripe.Checkout.Session> {
+    return stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['subscription', 'payment_intent'],
+    });
+  },
+
+  /**
    * Create a Stripe customer.
    */
   createCustomer(email: string): Promise<Stripe.Customer> {

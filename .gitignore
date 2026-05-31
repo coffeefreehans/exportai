@@ -41,6 +41,3 @@ Thumbs.db
 # WorkBuddy
 .workbuddy/
 .claude/
-
-# Prisma generated
-server/prisma/migrations/

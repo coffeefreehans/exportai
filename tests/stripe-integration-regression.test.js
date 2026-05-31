@@ -7,6 +7,15 @@ const compose = fs.readFileSync(path.join(root, 'docker-compose.yml'), 'utf8');
 const membership = fs.readFileSync(path.join(root, 'server', 'src', 'services', 'membership.service.ts'), 'utf8');
 const stripeService = fs.readFileSync(path.join(root, 'server', 'src', 'services', 'stripe.service.ts'), 'utf8');
 const envConfig = fs.readFileSync(path.join(root, 'server', 'src', 'config', 'env.ts'), 'utf8');
+const index = fs.readFileSync(path.join(root, 'server', 'src', 'index.ts'), 'utf8');
+const migrationsDir = path.join(root, 'server', 'prisma', 'migrations');
+const migrationSql = fs.readdirSync(migrationsDir)
+  .filter((entry) => fs.statSync(path.join(migrationsDir, entry)).isDirectory())
+  .map((entry) => {
+    const file = path.join(migrationsDir, entry, 'migration.sql');
+    return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+  })
+  .join('\n');
 
 assert(!compose.includes('sk_test_placeholder'), 'docker compose must not override STRIPE_SECRET_KEY with placeholder');
 assert(!compose.includes('whsec_placeholder'), 'docker compose must not override STRIPE_WEBHOOK_SECRET with placeholder');
@@ -37,6 +46,19 @@ assert(
 assert(
   envConfig.includes('STRIPE_PRICE_MONTHLY') && envConfig.includes('STRIPE_PRICE_LIFETIME'),
   'env validation should keep all Stripe price variables defined'
+);
+assert(
+  migrationSql.includes('CREATE TABLE IF NOT EXISTS "memberships"') ||
+    migrationSql.includes('CREATE TABLE "memberships"'),
+  'Prisma migrations must create the memberships table used by checkout'
+);
+assert(
+  migrationSql.includes('CREATE TYPE "PlanType"') && migrationSql.includes('CREATE TYPE "MembershipStatus"'),
+  'Membership migration must create required PostgreSQL enum types for existing databases'
+);
+assert(
+  index.includes("app.set('trust proxy', 1)") || index.includes('app.set("trust proxy", 1)'),
+  'Express must trust one proxy hop behind production nginx for rate limiting'
 );
 
 console.log('stripe integration regression passed');

@@ -60,70 +60,61 @@ function Draw-Background($g, $w, $h) {
 
 function Draw-Logo($g, $x, $y, $s, $label = $false) {
   Fill-RoundRect $g ([System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(55, 0, 0, 0))) ($x + $s * 0.06) ($y + $s * 0.08) ($s * 0.9) ($s * 0.86) ($s * 0.22)
-  $grad = [System.Drawing.Drawing2D.LinearGradientBrush]::new([System.Drawing.RectangleF]::new($x, $y, $s, $s), (Color "#312e81"), (Color "#f59e0b"), 45)
+  $grad = [System.Drawing.Drawing2D.LinearGradientBrush]::new([System.Drawing.RectangleF]::new($x, $y, $s, $s), (Color "#020617"), (Color "#312e81"), 45)
   Fill-RoundRect $g $grad $x $y $s $s ($s * 0.2)
   $grad.Dispose()
 
-  $sheetShadow = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(40, 15, 23, 42))
-  Fill-RoundRect $g $sheetShadow ($x + $s * 0.31) ($y + $s * 0.14) ($s * 0.46) ($s * 0.54) ($s * 0.06)
-  $sheetShadow.Dispose()
+  $streamPen1 = Pen "#38bdf8" ([Math]::Max(1, $s * 0.035))
+  $streamPen1.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
+  $streamPen1.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
+  $streamPen2 = Pen "#fbbf24" ([Math]::Max(1, $s * 0.03))
+  $streamPen2.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
+  $streamPen2.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
+  $g.DrawBezier($streamPen1, ($x + $s * 0.17), ($y + $s * 0.35), ($x + $s * 0.32), ($y + $s * 0.3), ($x + $s * 0.37), ($y + $s * 0.45), ($x + $s * 0.48), ($y + $s * 0.5))
+  $g.DrawBezier($streamPen2, ($x + $s * 0.16), ($y + $s * 0.52), ($x + $s * 0.32), ($y + $s * 0.56), ($x + $s * 0.36), ($y + $s * 0.47), ($x + $s * 0.48), ($y + $s * 0.5))
+  $g.DrawBezier($streamPen1, ($x + $s * 0.2), ($y + $s * 0.68), ($x + $s * 0.34), ($y + $s * 0.62), ($x + $s * 0.39), ($y + $s * 0.55), ($x + $s * 0.48), ($y + $s * 0.5))
+  $streamPen1.Dispose(); $streamPen2.Dispose()
 
-  $sheet1 = [System.Drawing.Drawing2D.GraphicsPath]::new()
-  $sheet1.AddPolygon(@(
-    [System.Drawing.PointF]::new(($x + $s * 0.25), ($y + $s * 0.2)),
-    [System.Drawing.PointF]::new(($x + $s * 0.63), ($y + $s * 0.12)),
-    [System.Drawing.PointF]::new(($x + $s * 0.72), ($y + $s * 0.55)),
-    [System.Drawing.PointF]::new(($x + $s * 0.34), ($y + $s * 0.63))
+  $prismShadow = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(50, 0, 0, 0))
+  $g.FillEllipse($prismShadow, ($x + $s * 0.36), ($y + $s * 0.34), ($s * 0.38), ($s * 0.38))
+  $prismShadow.Dispose()
+
+  $top = [System.Drawing.Drawing2D.GraphicsPath]::new()
+  $top.AddPolygon(@(
+    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.2)),
+    [System.Drawing.PointF]::new(($x + $s * 0.72), ($y + $s * 0.5)),
+    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.8)),
+    [System.Drawing.PointF]::new(($x + $s * 0.28), ($y + $s * 0.5))
   ))
-  $g.FillPath((Brush "#f8fafc"), $sheet1)
-  $sheet1.Dispose()
+  $g.FillPath((Brush "#e0f2fe"), $top)
+  $top.Dispose()
 
-  $sheet2 = [System.Drawing.Drawing2D.GraphicsPath]::new()
-  $sheet2.AddPolygon(@(
-    [System.Drawing.PointF]::new(($x + $s * 0.38), ($y + $s * 0.16)),
-    [System.Drawing.PointF]::new(($x + $s * 0.74), ($y + $s * 0.28)),
-    [System.Drawing.PointF]::new(($x + $s * 0.62), ($y + $s * 0.67)),
-    [System.Drawing.PointF]::new(($x + $s * 0.29), ($y + $s * 0.55))
+  $left = [System.Drawing.Drawing2D.GraphicsPath]::new()
+  $left.AddPolygon(@(
+    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.2)),
+    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.8)),
+    [System.Drawing.PointF]::new(($x + $s * 0.28), ($y + $s * 0.5))
   ))
-  $g.FillPath((Brush "#dbeafe"), $sheet2)
-  $sheet2.Dispose()
+  $g.FillPath((Brush "#67e8f9"), $left)
+  $left.Dispose()
 
-  Fill-RoundRect $g (Brush "#ffffff") ($x + $s * 0.24) ($y + $s * 0.31) ($s * 0.52) ($s * 0.42) ($s * 0.08)
-  Fill-RoundRect $g (Brush "#312e81") ($x + $s * 0.35) ($y + $s * 0.43) ($s * 0.3) ($s * 0.08) ($s * 0.03)
-  Fill-RoundRect $g (Brush "#f59e0b") ($x + $s * 0.39) ($y + $s * 0.55) ($s * 0.22) ($s * 0.07) ($s * 0.03)
-
-  $box = [System.Drawing.Drawing2D.GraphicsPath]::new()
-  $box.AddPolygon(@(
-    [System.Drawing.PointF]::new(($x + $s * 0.18), ($y + $s * 0.61)),
-    [System.Drawing.PointF]::new(($x + $s * 0.82), ($y + $s * 0.61)),
-    [System.Drawing.PointF]::new(($x + $s * 0.73), ($y + $s * 0.84)),
-    [System.Drawing.PointF]::new(($x + $s * 0.27), ($y + $s * 0.84))
+  $right = [System.Drawing.Drawing2D.GraphicsPath]::new()
+  $right.AddPolygon(@(
+    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.2)),
+    [System.Drawing.PointF]::new(($x + $s * 0.72), ($y + $s * 0.5)),
+    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.8))
   ))
-  $g.FillPath((Brush "#0f172a"), $box)
-  $box.Dispose()
+  $g.FillPath((Brush "#a78bfa"), $right)
+  $right.Dispose()
 
-  $lid = [System.Drawing.Drawing2D.GraphicsPath]::new()
-  $lid.AddPolygon(@(
-    [System.Drawing.PointF]::new(($x + $s * 0.18), ($y + $s * 0.61)),
-    [System.Drawing.PointF]::new(($x + $s * 0.35), ($y + $s * 0.49)),
-    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.61)),
-    [System.Drawing.PointF]::new(($x + $s * 0.32), ($y + $s * 0.72))
-  ))
-  $g.FillPath((Brush "#1e1b4b"), $lid)
-  $lid.Dispose()
+  $shine = Pen "#ffffff" ([Math]::Max(1, $s * 0.025))
+  $shine.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
+  $shine.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
+  $g.DrawLine($shine, ($x + $s * 0.42), ($y + $s * 0.38), ($x + $s * 0.5), ($y + $s * 0.25))
+  $shine.Dispose()
 
-  $lid2 = [System.Drawing.Drawing2D.GraphicsPath]::new()
-  $lid2.AddPolygon(@(
-    [System.Drawing.PointF]::new(($x + $s * 0.82), ($y + $s * 0.61)),
-    [System.Drawing.PointF]::new(($x + $s * 0.65), ($y + $s * 0.49)),
-    [System.Drawing.PointF]::new(($x + $s * 0.5), ($y + $s * 0.61)),
-    [System.Drawing.PointF]::new(($x + $s * 0.68), ($y + $s * 0.72))
-  ))
-  $g.FillPath((Brush "#1e1b4b"), $lid2)
-  $lid2.Dispose()
-
-  Fill-RoundRect $g (Brush "#fef3c7") ($x + $s * 0.37) ($y + $s * 0.68) ($s * 0.26) ($s * 0.1) ($s * 0.04)
-  $g.DrawString("AI", (FontObj ($s * 0.12) "Bold"), (Brush "#0f172a"), ($x + $s * 0.43), ($y + $s * 0.68))
+  Fill-RoundRect $g (Brush "#fbbf24") ($x + $s * 0.69) ($y + $s * 0.58) ($s * 0.18) ($s * 0.13) ($s * 0.065)
+  Fill-RoundRect $g (Brush "#fde68a") ($x + $s * 0.74) ($y + $s * 0.61) ($s * 0.18) ($s * 0.13) ($s * 0.065)
 }
 
 function Generate-Icon($size, $path) {
@@ -232,18 +223,17 @@ Generate-Icon 512 (Join-Path $iconDir "exportai-icon-512.png")
 
 $svg = @'
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <defs><linearGradient id="g" x1="18" y1="16" x2="110" y2="112"><stop stop-color="#312E81"/><stop offset="1" stop-color="#F59E0B"/></linearGradient></defs>
+  <defs><linearGradient id="g" x1="18" y1="16" x2="110" y2="112"><stop stop-color="#020617"/><stop offset="1" stop-color="#312E81"/></linearGradient></defs>
   <rect x="16" y="16" width="96" height="96" rx="22" fill="url(#g)"/>
-  <path d="M40 36 79 28l9 45-39 8Z" fill="#F8FAFC"/>
-  <path d="M55 32 92 44 80 84 45 72Z" fill="#DBEAFE"/>
-  <rect x="41" y="49" width="52" height="43" rx="9" fill="#FFFFFF"/>
-  <rect x="52" y="62" width="31" height="8" rx="4" fill="#312E81"/>
-  <rect x="56" y="76" width="23" height="7" rx="3.5" fill="#F59E0B"/>
-  <path d="M32 86h64l-9 23H41Z" fill="#0F172A"/>
-  <path d="M32 86 49 74l15 12-18 11Z" fill="#1E1B4B"/>
-  <path d="M96 86 79 74 64 86l18 11Z" fill="#1E1B4B"/>
-  <rect x="51" y="94" width="27" height="12" rx="4" fill="#FEF3C7"/>
-  <text x="64" y="105" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="800" fill="#0F172A">AI</text>
+  <path d="M30 45c17-8 28 2 40 12" fill="none" stroke="#38BDF8" stroke-width="5" stroke-linecap="round"/>
+  <path d="M29 66c17 4 27-4 41-9" fill="none" stroke="#FBBF24" stroke-width="4" stroke-linecap="round"/>
+  <path d="M34 83c16-7 27-13 36-26" fill="none" stroke="#38BDF8" stroke-width="5" stroke-linecap="round"/>
+  <path d="M64 30 91 64 64 98 37 64Z" fill="#E0F2FE"/>
+  <path d="M64 30v68L37 64Z" fill="#67E8F9"/>
+  <path d="M64 30 91 64 64 98Z" fill="#A78BFA"/>
+  <path d="M55 50 64 34" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+  <rect x="87" y="76" width="23" height="16" rx="8" fill="#FBBF24"/>
+  <rect x="93" y="81" width="23" height="16" rx="8" fill="#FDE68A"/>
 </svg>
 '@
 Set-Content -Path (Join-Path $extensionIconDir "icon.svg") -Value $svg -Encoding UTF8

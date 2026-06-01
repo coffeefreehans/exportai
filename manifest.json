@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "ExportAI - AI 对话导出助手",
+  "name": "__MSG_extensionName__",
   "version": "2.0.4",
-  "description": "一键导出 AI 对话，支持多平台、多格式导出",
+  "default_locale": "en",
+  "description": "__MSG_extensionDescription__",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",

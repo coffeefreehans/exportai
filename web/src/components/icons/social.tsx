@@ -84,21 +84,6 @@ export function MessageCircle({ className, ...props }: SVGProps<SVGSVGElement>) 
   );
 }
 
-export function MessageCircle({ className, ...props }: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      className={className}
-      {...props}
-    >
-      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-    </svg>
-  );
-}
 
 export function MessageCircleSearch({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
@@ -116,21 +101,6 @@ export function MessageCircleSearch({ className, ...props }: SVGProps<SVGSVGElem
   );
 }
 
-export function MessageCircle({ className, ...props }: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      className={className}
-      {...props}
-    >
-      <path d="M0 0h24v24H0z" fill="none" stroke="none"/><path d="M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1"/>
-    </svg>
-  );
-}
 
 export function MessageCircleCode({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
@@ -164,21 +134,6 @@ export function TwitterFill({ className, ...props }: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function MessageCircleCode({ className, ...props }: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      className={className}
-      {...props}
-    >
-      <path d="M0 0h24v24H0z" fill="none" stroke="none"/><path d="M11.036 19.933a9.798 9.798 0 0 1 -3.336 -.933l-4.7 1l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c2.128 1.815 3.053 4.361 2.694 6.81"/><path d="M20 21l2 -2l-2 -2"/><path d="M17 17l-2 2l2 2"/>
-    </svg>
-  );
-}
 
 export function MessageCircleExclamation({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
@@ -308,21 +263,6 @@ export function TwitterLine({ className, ...props }: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function MessageCircleHeart({ className, ...props }: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      className={className}
-      {...props}
-    >
-      <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/><path d="M7.828 13.07A3 3 0 0 1 12 8.764a3 3 0 0 1 5.004 2.224 3 3 0 0 1-.832 2.083l-3.447 3.62a1 1 0 0 1-1.45-.001z"/>
-    </svg>
-  );
-}
 
 export function DiscordLine({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
@@ -468,18 +408,3 @@ export function ChatCircleText({ className, ...props }: SVGProps<SVGSVGElement>)
   );
 }
 
-export function UserCircle({ className, ...props }: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      className={className}
-      {...props}
-    >
-      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/>
-    </svg>
-  );
-}

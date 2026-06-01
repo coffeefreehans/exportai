@@ -84,21 +84,6 @@ export function UserCircleGear({ className, ...props }: SVGProps<SVGSVGElement>)
   );
 }
 
-export function MailCheck({ className, ...props }: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      className={className}
-      {...props}
-    >
-      <path d="M0 0h24v24H0z" fill="none" stroke="none"/><path d="M11 19h-6a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v6"/><path d="M3 7l9 6l9 -6"/><path d="M15 19l2 2l4 -4"/>
-    </svg>
-  );
-}
 
 export function LogoutCircleLine({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
@@ -372,21 +357,6 @@ export function MailOpen({ className, ...props }: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function UserCircle({ className, ...props }: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      className={className}
-      {...props}
-    >
-      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/>
-    </svg>
-  );
-}
 
 export function MailLockLine({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (

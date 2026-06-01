@@ -73,7 +73,7 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} ExportAI. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <a href="#" className="text-muted hover:text-foreground text-xs transition">{copy.privacy}</a>
+            <Link href="/privacy" className="text-muted hover:text-foreground text-xs transition">{copy.privacy}</Link>
             <a href="#" className="text-muted hover:text-foreground text-xs transition">{copy.terms}</a>
           </div>
         </div>

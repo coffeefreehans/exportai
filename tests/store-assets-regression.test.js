@@ -26,6 +26,15 @@ assertPng(path.join(root, 'icons', 'icon128.png'), 128, 128);
 assertPng(path.join(root, 'store-assets', 'icons', 'chrome-icon-128.png'), 128, 128);
 assertPng(path.join(root, 'store-assets', 'icons', 'edge-logo-300.png'), 300, 300);
 assertPng(path.join(root, 'store-assets', 'icons', 'exportai-icon-512.png'), 512, 512);
+
+for (const size of [16, 32, 48, 64, 96, 128, 256, 300, 512, 1024]) {
+  assertPng(
+    path.join(root, 'store-assets', 'icons', 'all-sizes', `exportai-icon-${size}x${size}.png`),
+    size,
+    size,
+  );
+}
+
 assertPng(path.join(root, 'store-assets', 'promo', 'chrome-small-promo-440x280.png'), 440, 280);
 assertPng(path.join(root, 'store-assets', 'promo', 'edge-small-promo-440x280.png'), 440, 280);
 assertPng(path.join(root, 'store-assets', 'promo', 'chrome-marquee-1400x560.png'), 1400, 560);

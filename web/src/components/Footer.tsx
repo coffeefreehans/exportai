@@ -5,7 +5,7 @@ import { useLanguage } from '@/lib/i18n';
 
 const COPY = {
   zh: {
-    description: '一个用于导出 AI 对话的 Chrome 扩展，支持多平台、多格式、图片内容保留和账号设置同步。',
+    description: '一个用于导出 AI 对话的浏览器扩展，支持多平台、多格式、图片内容保留和账号设置同步。',
     product: '产品',
     features: '功能',
     pricing: '会员',
@@ -17,7 +17,7 @@ const COPY = {
     terms: '服务条款',
   },
   en: {
-    description: 'A Chrome extension for exporting AI conversations across platforms, formats, images, and account-synced settings.',
+    description: 'A browser extension for exporting AI conversations across platforms, formats, images, and account-synced settings.',
     product: 'Product',
     features: 'Features',
     pricing: 'Pricing',

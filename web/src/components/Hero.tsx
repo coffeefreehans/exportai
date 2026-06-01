@@ -1,15 +1,16 @@
 'use client';
 
 import { useLanguage } from '@/lib/i18n';
-import { useBrowserExtensionInstallUrl } from '@/lib/extension-store';
+import { useBrowserExtensionInstallTarget } from '@/lib/extension-store';
 
 const COPY = {
   zh: {
     badge: '支持 ChatGPT、Claude、Gemini、DeepSeek、Grok、豆包、Kimi、MiniMax、GLM',
     title: '一键导出 AI 对话',
     subtitle: '多平台、多格式、可同步',
-    description: 'ExportAI 是一个 Chrome 扩展，用来保存完整 AI 聊天记录。支持弹窗多选导出、页面浮动导出、图片与附件内容保留，以及账号登录后的设置同步。',
-    install: '安装 Chrome 扩展',
+    description: 'ExportAI 是一个浏览器扩展，用来保存完整 AI 聊天记录。支持弹窗多选导出、页面浮动导出、图片与附件内容保留，以及账号登录后的设置同步。',
+    installChrome: '安装 Chrome 插件',
+    installEdge: '安装 Edge 插件',
     features: '查看功能',
     panelTitle: 'ExportAI 导出面板',
     humanText: '把这次 AI 对话保存成文档，图片和格式也要保留。',
@@ -21,8 +22,9 @@ const COPY = {
     badge: 'Supports ChatGPT, Claude, Gemini, DeepSeek, Grok, Doubao, Kimi, MiniMax, GLM',
     title: 'Export AI conversations in one click',
     subtitle: 'Multi-platform, multi-format, synced',
-    description: 'ExportAI is a Chrome extension for saving complete AI chat records. It supports multi-format popup export, an in-page floating export panel, image and attachment preservation, and account-based settings sync.',
-    install: 'Install Chrome extension',
+    description: 'ExportAI is a browser extension for saving complete AI chat records. It supports multi-format popup export, an in-page floating export panel, image and attachment preservation, and account-based settings sync.',
+    installChrome: 'Install Chrome extension',
+    installEdge: 'Install Edge Add-on',
     features: 'View features',
     panelTitle: 'ExportAI export panel',
     humanText: 'Save this AI conversation as a document, with images and formatting preserved.',
@@ -35,8 +37,9 @@ const COPY = {
 export default function Hero() {
   const formats = ['TXT', 'PDF', 'MHT', 'HTML', 'MD', 'DOCX', 'XLSX', 'PNG'];
   const { language } = useLanguage();
-  const installUrl = useBrowserExtensionInstallUrl();
+  const installTarget = useBrowserExtensionInstallTarget();
   const copy = COPY[language];
+  const installText = installTarget.browser === 'edge' ? copy.installEdge : copy.installChrome;
 
   return (
     <section className="relative pt-32 pb-20 overflow-hidden">
@@ -63,12 +66,12 @@ export default function Hero() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
-            href={installUrl}
+            href={installTarget.url}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl hover:from-primary-hover hover:to-secondary-hover transition shadow-lg shadow-primary/25"
           >
-            {copy.install}
+            {installText}
           </a>
           <a
             href="#features"

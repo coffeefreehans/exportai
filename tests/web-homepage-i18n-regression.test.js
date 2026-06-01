@@ -18,7 +18,7 @@ for (const file of files) {
 }
 
 const checks = {
-  'components/Hero.tsx': ['Export AI conversations in one click', 'Install Chrome extension', 'Export formats'],
+  'components/Hero.tsx': ['Export AI conversations in one click', 'Install Chrome extension', 'Install Edge Add-on', 'Export formats'],
   'components/Features.tsx': ['Product focus', 'Built for real export workflows', 'Preserve images and rich text'],
   'components/FAQ.tsx': ['Frequently asked questions', 'Which AI platforms does ExportAI support?'],
   'components/Testimonials.tsx': ['Use cases', 'Product manager', 'Save AI output for the long term'],

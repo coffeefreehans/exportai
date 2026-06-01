@@ -19,16 +19,22 @@ assert(router.includes('chromewebstore.google.com'), 'router must include a Chro
 assert(router.includes('NEXT_PUBLIC_EDGE_EXTENSION_URL'), 'Edge store URL must be configurable per environment');
 assert(router.includes('NEXT_PUBLIC_CHROME_EXTENSION_URL'), 'Chrome store URL must be configurable per environment');
 assert(
-  router.includes('getBrowserExtensionInstallUrl'),
-  'router must expose getBrowserExtensionInstallUrl'
+  router.includes('getBrowserExtensionInstallUrl') && router.includes('getBrowserExtensionInstallTarget'),
+  'router must expose browser-aware install URL and target helpers'
 );
 assert(
-  hero.includes('useBrowserExtensionInstallUrl') && !hero.includes('href="https://chromewebstore.google.com"'),
-  'Hero install button must use browser-aware store routing'
+  hero.includes('useBrowserExtensionInstallTarget') &&
+    hero.includes('installEdge') &&
+    hero.includes('installChrome') &&
+    !hero.includes('href="https://chromewebstore.google.com"'),
+  'Hero install button must use browser-aware store routing and browser-specific text'
 );
 assert(
-  page.includes('useBrowserExtensionInstallUrl') && !page.includes('href="https://chromewebstore.google.com"'),
-  'Homepage CTA install button must use browser-aware store routing'
+  page.includes('useBrowserExtensionInstallTarget') &&
+    page.includes('installEdge') &&
+    page.includes('installChrome') &&
+    !page.includes('href="https://chromewebstore.google.com"'),
+  'Homepage CTA install button must use browser-aware store routing and browser-specific text'
 );
 assert(
   compose.includes('NEXT_PUBLIC_CHROME_EXTENSION_URL') && compose.includes('NEXT_PUBLIC_EDGE_EXTENSION_URL'),

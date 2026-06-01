@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'ExportAI - 一键导出 AI 对话',
-  description: 'ExportAI 是一款 Chrome 扩展，支持多平台 AI 对话导出、8 种文件格式、图片内容保留和账号设置同步。',
+  description: 'ExportAI 是一款浏览器扩展，支持多平台 AI 对话导出、8 种文件格式、图片内容保留和账号设置同步。',
 };
 
 const EXT_TOKEN_HANDLER = `

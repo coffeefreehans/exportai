@@ -8,27 +8,30 @@ import Testimonials from '@/components/Testimonials';
 import FAQ from '@/components/FAQ';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/lib/i18n';
-import { useBrowserExtensionInstallUrl } from '@/lib/extension-store';
+import { useBrowserExtensionInstallTarget } from '@/lib/extension-store';
 
 const COPY = {
   zh: {
     title: '开始导出你的 AI 对话',
-    description: '安装 Chrome 扩展，登录账号后即可使用弹窗手动导出。需要页面内浮动导出框时，可以开通会员。',
-    install: '安装 Chrome 扩展',
+    description: '安装浏览器扩展，登录账号后即可使用弹窗手动导出。需要页面内浮动导出框时，可以开通会员。',
+    installChrome: '安装 Chrome 插件',
+    installEdge: '安装 Edge 插件',
     pricing: '查看会员',
   },
   en: {
     title: 'Start exporting your AI conversations',
-    description: 'Install the Chrome extension and log in to use manual popup export. Upgrade when you need the in-page floating export panel.',
-    install: 'Install Chrome extension',
+    description: 'Install the browser extension and log in to use manual popup export. Upgrade when you need the in-page floating export panel.',
+    installChrome: 'Install Chrome extension',
+    installEdge: 'Install Edge Add-on',
     pricing: 'View pricing',
   },
 };
 
 export default function HomePage() {
   const { language } = useLanguage();
-  const installUrl = useBrowserExtensionInstallUrl();
+  const installTarget = useBrowserExtensionInstallTarget();
   const copy = COPY[language];
+  const installText = installTarget.browser === 'edge' ? copy.installEdge : copy.installChrome;
 
   return (
     <main className="min-h-screen bg-background">
@@ -52,12 +55,12 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a
-                  href={installUrl}
+                  href={installTarget.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl hover:from-primary-hover hover:to-secondary-hover transition shadow-lg shadow-primary/25"
                 >
-                  {copy.install}
+                  {installText}
                 </a>
                 <a
                   href="#pricing"

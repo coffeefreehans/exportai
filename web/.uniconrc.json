@@ -1,0 +1,68 @@
+{
+  "$schema": "https://unicon.sh/schema/uniconrc.json",
+  "bundles": [
+    {
+      "name": "navigation",
+      "query": "home sparkles menu x log-in log-out settings help-circle search",
+      "limit": 30,
+      "format": "react",
+      "output": "./src/components/icons/navigation.tsx"
+    },
+    {
+      "name": "features",
+      "query": "globe file-text clipboard-copy brain shield layers refresh-cw history arrow-down-to-line zap",
+      "limit": 30,
+      "format": "react",
+      "output": "./src/components/icons/features.tsx"
+    },
+    {
+      "name": "platforms",
+      "query": "chat-gpt claude-fill gemini-line deepseek-fill perplexity-fill bot cpu github",
+      "limit": 30,
+      "format": "react",
+      "output": "./src/components/icons/platforms.tsx"
+    },
+    {
+      "name": "formats",
+      "query": "file-text file-pdf file-json file-spreadsheet file-html file-code image markdown-logo",
+      "limit": 30,
+      "format": "react",
+      "output": "./src/components/icons/formats.tsx"
+    },
+    {
+      "name": "auth",
+      "query": "mail lock user eye eye-off log-out settings shield-check check-circle x-circle",
+      "limit": 30,
+      "format": "react",
+      "output": "./src/components/icons/auth.tsx"
+    },
+    {
+      "name": "pricing",
+      "query": "coffee crown building check x dollar-sign credit-card",
+      "limit": 30,
+      "format": "react",
+      "output": "./src/components/icons/pricing.tsx"
+    },
+    {
+      "name": "actions",
+      "query": "download copy share printer folder-open external-link maximize-2 pin",
+      "limit": 30,
+      "format": "react",
+      "output": "./src/components/icons/actions.tsx"
+    },
+    {
+      "name": "status",
+      "query": "check-circle alert-triangle x-circle loader-2 info wifi-off",
+      "limit": 30,
+      "format": "react",
+      "output": "./src/components/icons/status.tsx"
+    },
+    {
+      "name": "social",
+      "query": "github twitter mail message-circle discord globe",
+      "limit": 30,
+      "format": "react",
+      "output": "./src/components/icons/social.tsx"
+    }
+  ]
+}

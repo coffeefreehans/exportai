@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ExportAI</title>
+  <link rel="stylesheet" href="./popup.css">
+</head>
+<body>
+  <main class="popup">
+    <header class="title-row">
+      <div>
+        <h1>ExportAI</h1>
+        <p id="accountText" class="account-text">ExportAI</p>
+      </div>
+      <div class="header-actions">
+        <button id="loginButton" class="icon-button" type="button" aria-label="Account" title="Account" data-i18n-aria-label="accountButton" data-i18n-title="accountButton">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z"/></svg>
+        </button>
+        <button id="openOptions" class="icon-button" type="button" aria-label="Settings" title="Settings" data-i18n-aria-label="settingsButton" data-i18n-title="settingsButton">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94c.05-.3.08-.62.08-.94s-.03-.64-.08-.94l2.06-1.69c.19-.15.25-.41.14-.63l-1.85-3.48c-.11-.21-.36-.31-.59-.24l-2.42.88c-.47-.34-.98-.63-1.55-.85l-.43-2.52c-.03-.23-.23-.39-.47-.39H9.97c-.24 0-.44.16-.47.39l-.43 2.52c-.57.22-1.08.51-1.55.85l-2.42-.88c-.23-.07-.48.03-.59.24L2.66 8.74c-.11.21-.05.47.14.63l2.06 1.69c-.05.3-.08.62-.08.94s.03.64.08.94L2.8 14.63c-.19.15-.25.41-.14.63l1.85 3.48c.11.21.36.31.59.24l2.42-.88c.47.34.98.63 1.55.85l.43 2.52c.03.23.23.39.47.39h4.06c.24 0 .44-.16.47-.39l.43-2.52c.57-.22 1.08-.51 1.55-.85l2.42.88c.23.07.48-.03.59-.24l1.85-3.48c.11-.21.05-.47-.14-.63l-2.06-1.69ZM12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5Z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section id="loginPanel" class="panel" hidden>
+      <p data-i18n="signInPrompt">Please sign in to ExportAI before exporting.</p>
+      <button id="goLoginButton" class="primary-button" type="button" data-i18n="signIn">Sign in</button>
+    </section>
+
+    <p id="status" class="status" hidden></p>
+
+    <section id="summary" class="summary-card" hidden>
+      <div class="summary-row"><span data-i18n="platform">Platform</span><strong id="summaryProvider"></strong></div>
+      <div class="summary-row"><span data-i18n="filename">Filename</span><strong id="summaryChatName"></strong></div>
+    </section>
+
+    <section id="exportPanel" class="panel" hidden>
+      <div class="section-title" data-i18n="chooseExportFormats">Choose export formats</div>
+      <div id="formatOptions" class="format-grid"></div>
+      <button id="exportButton" class="primary-button" type="button" data-i18n="export">Export</button>
+    </section>
+  </main>
+
+  <script src="../shared/namespace.js"></script>
+  <script src="../shared/constants.js"></script>
+  <script src="../shared/default-settings.js"></script>
+  <script src="../shared/extension-bridge.js"></script>
+  <script src="../shared/storage.js"></script>
+  <script src="../shared/app-theme.js"></script>
+  <script src="../shared/button-system.js"></script>
+  <script src="./popup.js"></script>
+</body>
+</html>

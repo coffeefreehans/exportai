@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unicon.sh/schema/uniconrc.json",
+  "bundles": [
+    {
+      "name": "popup",
+      "query": "settings help-circle message-square refresh-cw pin maximize-2 download copy share trash-2 check-square filter",
+      "limit": 30,
+      "format": "svg",
+      "output": "./src/assets/icons/popup.svg"
+    }
+  ]
+}

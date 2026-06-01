@@ -11,6 +11,14 @@ assert(
   'web login/register sync must clear stale chrome logout marker'
 );
 assert(
+  api.includes('shouldSyncExtensionAuth') && api.includes('extension_callback'),
+  'web auth must only write extension storage during an explicit extension callback'
+);
+assert(
+  bridge.includes('isExtensionCallbackSession') && bridge.includes('extension_callback'),
+  'web auth bridge must not sync extension storage without an explicit callback'
+);
+assert(
   bridge.includes('hasLocalAuth()') && bridge.includes('syncLocalToChrome("login-present")'),
   'web auth bridge initial logout handling must not clear fresh local auth'
 );

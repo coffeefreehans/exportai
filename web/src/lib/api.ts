@@ -9,6 +9,7 @@
  */
 
 const API_BASE = '';
+const EXTENSION_CALLBACK_SESSION_KEY = 'exportai_extension_callback_session';
 
 interface ApiResponse<T> {
   code: number;
@@ -38,6 +39,24 @@ interface MembershipData {
   expiresAt: string | null;
   cancelledAt: string | null;
   isMember: boolean;
+}
+
+function markExtensionCallbackSessionFromUrl(): boolean {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  const isCallback = params.get('extension_callback') === '1';
+  if (isCallback) {
+    sessionStorage.setItem(EXTENSION_CALLBACK_SESSION_KEY, '1');
+  }
+  return isCallback;
+}
+
+function shouldSyncExtensionAuth(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    markExtensionCallbackSessionFromUrl() ||
+    sessionStorage.getItem(EXTENSION_CALLBACK_SESSION_KEY) === '1'
+  );
 }
 
 /**
@@ -104,6 +123,7 @@ export async function apiRequest<T>(
  */
 function syncToChromeStorage() {
   try {
+    if (!shouldSyncExtensionAuth()) return;
     const c = (window as any).chrome;
     if (c?.storage?.local) {
       const obj: Record<string, string> = {};
@@ -123,6 +143,7 @@ function syncToChromeStorage() {
 
 function clearChromeStorage() {
   try {
+    if (!shouldSyncExtensionAuth()) return;
     const c = (window as any).chrome;
     if (c?.storage?.local) {
       c.storage.local.set({ exportai_auth_logout_at: new Date().toISOString() });
@@ -134,6 +155,7 @@ function clearChromeStorage() {
 function syncMembershipToChromeStorage(membership: unknown) {
   try {
     localStorage.setItem('exportai_membership', JSON.stringify(membership || { isMember: false }));
+    if (!shouldSyncExtensionAuth()) return;
     const c = (window as any).chrome;
     if (c?.storage?.local) {
       c.storage.local.set({ exportai_membership: membership || { isMember: false } });

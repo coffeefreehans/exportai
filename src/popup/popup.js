@@ -380,8 +380,8 @@
     }
   }
 
-  goLoginButton.addEventListener("click", () => openUrl(`${WEB_URL}/login?return=/account`));
-  loginButton.addEventListener("click", () => openUrl(`${WEB_URL}/account`));
+  goLoginButton.addEventListener("click", () => openUrl(`${WEB_URL}/login?return=/account&extension_callback=1`));
+  loginButton.addEventListener("click", () => openUrl(`${WEB_URL}/account?extension_callback=1`));
   openOptionsButton.addEventListener("click", () => {
     if (globalThis.chrome?.runtime?.openOptionsPage) {
       globalThis.chrome.runtime.openOptionsPage();

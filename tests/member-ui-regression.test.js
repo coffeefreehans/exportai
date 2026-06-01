@@ -26,12 +26,15 @@ assert(optionsJs.includes("showHeaderExportButtonClaude"), "settings save must h
 assert(pricingTsx.includes("getMembership"), "web pricing must read membership state.");
 assert(pricingTsx.includes("membership?.isMember"), "web pricing must disable subscription actions for active members.");
 assert(apiTs.includes("exportai_membership"), "web membership fetch must sync membership state for the extension.");
+assert(apiTs.includes("shouldSyncExtensionAuth"), "web auth must only sync to extension during an explicit extension callback session.");
 assert(webAuthBridge.includes("exportai_membership"), "web auth bridge must sync web membership state into extension storage.");
+assert(webAuthBridge.includes("isExtensionCallbackSession"), "web auth bridge must gate storage sync behind an explicit extension callback session.");
 assert(webAuthBridge.includes("storage?.onChanged"), "web auth bridge must listen for extension-side auth changes.");
 assert(webAuthBridge.includes("exportai-auth-sync"), "web auth bridge must notify the web app when extension auth changes.");
 assert(webAuthBridge.includes("location.assign"), "web auth bridge must navigate when extension auth changes while web is open.");
 assert(authForm.includes("resolveReturnPath"), "web login/register must return to the requested page.");
 assert(authForm.includes("api.getMembership().catch"), "web login/register must refresh membership before returning.");
-assert(popupJs.includes("/login?return=/account"), "extension login entry must return the web user to the account page.");
+assert(popupJs.includes("/login?return=/account&extension_callback=1"), "extension login entry must return the web user to the account page through an explicit callback session.");
+assert(optionsJs.includes("/account?extension_callback=1"), "settings account link must open the web account through an explicit callback session.");
 
 console.log("member ui regression passed");

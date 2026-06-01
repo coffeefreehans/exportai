@@ -577,7 +577,7 @@
   tabButtons.forEach((button) => {
     button.addEventListener("click", () => activateTab(button.dataset.tab));
   });
-  loginButton.addEventListener("click", () => openUrl(`${WEB_URL}/account`));
+  loginButton.addEventListener("click", () => openUrl(`${WEB_URL}/account?extension_callback=1`));
   logoutButton?.addEventListener("click", () => {
     chrome.storage.local.set({ [AUTH_LOGOUT_KEY]: new Date().toISOString() }, () => {
       chrome.storage.local.remove(AUTH_KEYS, () => {

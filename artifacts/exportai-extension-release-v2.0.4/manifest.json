@@ -46,8 +46,7 @@
     "https://www.hailuo.ai/*",
     "https://hailuoai.com/*",
     "https://www.hailuoai.com/*",
-    "https://www.exportai.followaigc.com/*",
-    "https://exportai.followaigc.com/*"
+        "https://exportai.followaigc.com/*"
   ],
   "background": {
     "service_worker": "src/background/background.js"
@@ -67,7 +66,6 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.exportai.followaigc.com/*",
         "https://exportai.followaigc.com/*"
       ],
       "js": [

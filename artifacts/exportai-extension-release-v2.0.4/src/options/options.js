@@ -1,7 +1,7 @@
 (() => {
   const root = globalThis.ChatExportAi;
   const { EXPORT_FORMATS, MSG_CHECK_MEMBERSHIP } = root.constants;
-  const WEB_URL = "https://www.exportai.followaigc.com";
+  const WEB_URL = "https://exportai.followaigc.com";
   const AUTO_EXPORT_FEATURE_ENABLED = false;
   const FORMAT_OPTIONS = [
     [EXPORT_FORMATS.TXT, "TXT"],

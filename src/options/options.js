@@ -1,6 +1,6 @@
 (() => {
   const root = globalThis.ChatExportAi;
-  const { EXPORT_FORMATS, MSG_CHECK_MEMBERSHIP, MSG_NOTION_CONNECT, MSG_NOTION_DISCONNECT, MSG_NOTION_STATUS, MSG_NOTION_TARGETS } = root.constants;
+  const { EXPORT_FORMATS, MSG_CHECK_MEMBERSHIP, MSG_NOTION_DISCONNECT, MSG_NOTION_STATUS, MSG_NOTION_TARGETS } = root.constants;
   const WEB_URL = "https://exportai.nexscp.com";
   const AUTO_EXPORT_FEATURE_ENABLED = false;
   const FORMAT_OPTIONS = [
@@ -215,6 +215,15 @@
       return;
     }
     location.href = url;
+  }
+
+  function openNotionConnectWindow() {
+    const url = globalThis.chrome.runtime.getURL("src/notion-connect/notion-connect.html");
+    if (globalThis.chrome?.windows?.create) {
+      globalThis.chrome.windows.create({ url, type: "popup", width: 420, height: 640, focused: true });
+      return;
+    }
+    openUrl(url);
   }
 
   function setStatus(message) {
@@ -651,26 +660,21 @@
       });
     });
   });
-  notionConnectButton?.addEventListener("click", async () => {
-    notionConnectButton.disabled = true;
-    try {
-      const response = await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_CONNECT });
-      if (!response?.ok) {
-        showNotionError(response?.error || "Notion connection failed.");
-        return;
-      }
-      await refreshNotion();
-    } catch (error) {
-      showNotionError(error?.message || "Notion connection failed.");
-    } finally {
-      notionConnectButton.disabled = false;
-    }
-  });
+  notionConnectButton?.addEventListener("click", openNotionConnectWindow);
   notionDisconnectButton?.addEventListener("click", async () => {
     await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_DISCONNECT });
     currentSettings = await root.storage.saveSettings({ notionTarget: null });
     await refreshNotion();
   });
+  globalThis.chrome?.storage?.onChanged?.addListener?.((changes, areaName) => {
+    if (areaName !== "local" || !changes.exportai_notion_connection) return;
+    refreshNotion().catch((error) => showNotionError(error?.message || "Could not refresh Notion connection."));
+  });
+
+  const requestedTab = new URL(location.href).searchParams.get("tab");
+  if (requestedTab && tabButtons.some((button) => button.dataset.tab === requestedTab)) {
+    activateTab(requestedTab);
+  }
 
   init().catch((error) => setStatus(`Settings page error: ${error.message}`));
 })();

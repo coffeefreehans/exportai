@@ -44,14 +44,16 @@ async function run() {
     page.on("pageerror", (error) => pageErrors.push(error.message));
     await page.goto(`chrome-extension://${extensionId}/src/options/options.html`);
     await page.locator("#tab-integration").click();
+    const connectWindowPromise = context.waitForEvent("page", { timeout: 3000 });
     await page.locator("#notionConnect").click();
-    await page.waitForTimeout(300);
+    const connectWindow = await connectWindowPromise;
+    await connectWindow.locator("#loginPanel").waitFor({ state: "visible", timeout: 5000 });
 
-    const localStatus = await page.locator("#notionStatusText").textContent();
+    const localStatus = await connectWindow.locator("#statusText").textContent();
     assert.match(
       String(localStatus),
       /expired|sign in|log in|登录|登陆|过期/i,
-      "A failed Notion connection must show an actionable message inside the Notion card."
+      "A failed Notion connection must show an actionable message inside the dedicated connection window."
     );
     assert.deepStrictEqual(pageErrors, [], "The settings page must not throw while handling an expired login.");
   } finally {

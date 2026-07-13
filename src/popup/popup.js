@@ -177,6 +177,15 @@
     location.href = url;
   }
 
+  function openNotionConnectWindow() {
+    const url = globalThis.chrome.runtime.getURL("src/notion-connect/notion-connect.html");
+    if (globalThis.chrome?.windows?.create) {
+      globalThis.chrome.windows.create({ url, type: "popup", width: 420, height: 640, focused: true });
+      return;
+    }
+    openUrl(url);
+  }
+
   function storageGet(keys) {
     return new Promise((resolve) => {
       globalThis.chrome.storage.local.get(keys, (result) => resolve(result || {}));
@@ -460,7 +469,7 @@
   notionButton.addEventListener("click", async () => {
     if (exportInProgress || notionButton.disabled) return;
     if (!currentSettings?.notionTarget?.id) {
-      if (globalThis.chrome?.runtime?.openOptionsPage) globalThis.chrome.runtime.openOptionsPage();
+      openNotionConnectWindow();
       setStatus(t("notionSetupHint"));
       return;
     }

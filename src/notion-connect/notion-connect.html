@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>连接 Notion</title>
+  <link rel="stylesheet" href="./notion-connect.css">
+</head>
+<body>
+  <header class="window-bar">
+    <strong>ExportAI</strong>
+    <button id="closeButton" class="icon-button" type="button" aria-label="关闭">×</button>
+  </header>
+  <main class="connect-shell">
+    <div class="service-link" aria-hidden="true">
+      <div class="service-mark exportai-mark">E</div>
+      <div class="link-arrows">⇄</div>
+      <div class="service-mark notion-mark">N</div>
+    </div>
+    <h1>连接 Notion</h1>
+    <p id="statusText" class="status-text" role="status" aria-live="polite">正在检查 ExportAI 登录状态...</p>
+
+    <section id="loginPanel" class="panel" hidden>
+      <form id="loginForm">
+        <label>
+          <span>邮箱</span>
+          <input id="loginEmail" type="email" autocomplete="username" placeholder="请输入邮箱" required>
+        </label>
+        <label>
+          <span>密码</span>
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码" required>
+        </label>
+        <button id="loginSubmit" class="primary-button" type="submit">登录并继续</button>
+      </form>
+      <p class="privacy-note">登录成功后将自动继续 Notion 授权。</p>
+    </section>
+
+    <section id="progressPanel" class="panel progress-panel" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <strong>等待 Notion 授权</strong>
+      <p>请在打开的 Notion 窗口中选择工作区和页面。</p>
+    </section>
+
+    <section id="successPanel" class="panel success-panel" hidden>
+      <div class="success-mark" aria-hidden="true">✓</div>
+      <strong>Notion 已连接</strong>
+      <p id="workspaceText"></p>
+      <button id="chooseTargetButton" class="primary-button" type="button">选择默认保存位置</button>
+    </section>
+
+    <button id="cancelButton" class="text-button" type="button">取消</button>
+  </main>
+  <script src="./notion-connect.js"></script>
+</body>
+</html>

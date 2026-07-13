@@ -37,9 +37,17 @@ async function run() {
 
     const popup = await context.newPage();
     await popup.goto(`chrome-extension://${extensionId}/src/popup/popup.html`);
+    const connectWindowPromise = context.waitForEvent("page", { timeout: 3000 });
     await popup.locator("#notionButton").click();
+    const connectWindow = await connectWindowPromise;
+    await connectWindow.waitForLoadState("domcontentloaded");
     await popup.waitForTimeout(100);
 
+    assert.strictEqual(
+      connectWindow.url(),
+      `chrome-extension://${extensionId}/src/notion-connect/notion-connect.html`,
+      "Send to Notion must open the visible connection window when setup is incomplete."
+    );
     assert.match(
       String(await popup.locator("#statusText").textContent()),
       /connect notion|设置 Notion|连接 Notion/i,

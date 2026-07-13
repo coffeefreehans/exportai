@@ -23,6 +23,7 @@
   const MSG_NOTION_STATUS = "EXPORTAI_NOTION_STATUS";
   const MSG_NOTION_TARGETS = "EXPORTAI_NOTION_TARGETS";
   const MSG_NOTION_CREATE_PAGE = "EXPORTAI_NOTION_CREATE_PAGE";
+  const MSG_ACCOUNT_LOGIN = "EXPORTAI_ACCOUNT_LOGIN";
   const NOTION_STORAGE_KEY = "exportai_notion_connection";
   const NOTION_VERSION = "2026-03-11";
 
@@ -165,6 +166,28 @@
 
   function storageRemove(keys) {
     return new Promise((resolve) => chrome.storage.local.remove(keys, () => resolve(true)));
+  }
+
+  async function loginExportAi(payload = {}) {
+    const email = String(payload.email || "").trim();
+    const password = String(payload.password || "");
+    if (!email || !password) throw new Error("Email and password are required.");
+    const response = await fetch(`${API_BASE}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    const body = await response.json().catch(() => null);
+    if (!response.ok || body?.code >= 400 || !body?.data?.accessToken || !body?.data?.refreshToken) {
+      throw new Error(body?.message || "ExportAI login failed.");
+    }
+    await storageSet({
+      exportai_access_token: body.data.accessToken,
+      exportai_refresh_token: body.data.refreshToken,
+      exportai_user_info: body.data.user || { email }
+    });
+    await storageRemove(["exportai_auth_logout_at", MEMBERSHIP_STORAGE_KEY]);
+    return { ok: true, user: body.data.user || { email } };
   }
 
   async function notionRequest(path, options = {}) {
@@ -1532,6 +1555,11 @@
 
     if (message.type === MSG_NOTION_CONNECT) {
       connectNotion().then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
+      return true;
+    }
+
+    if (message.type === MSG_ACCOUNT_LOGIN) {
+      loginExportAi(message.payload).then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
       return true;
     }
 

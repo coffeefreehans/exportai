@@ -21,6 +21,12 @@
     <p id="statusText" class="status-text" role="status" aria-live="polite">正在检查 ExportAI 登录状态...</p>
 
     <section id="loginPanel" class="panel" hidden>
+      <button id="continueAccountButton" class="account-button" type="button" hidden></button>
+      <button id="googleLoginButton" class="google-button" type="button">
+        <span class="google-mark" aria-hidden="true">G</span>
+        <span>使用 Google 登录</span>
+      </button>
+      <div class="login-divider"><span>或</span></div>
       <form id="loginForm">
         <label>
           <span>邮箱</span>

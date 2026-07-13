@@ -80,6 +80,39 @@ h1 { margin: 24px 0 8px; font-size: 25px; }
 }
 
 .panel[hidden] { display: none !important; }
+.account-button {
+  width: 100%;
+  min-height: 46px;
+  margin-bottom: 12px;
+  border: 1px solid #b9ccff;
+  border-radius: 9px;
+  background: #edf3ff;
+  color: #174fc7;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+.account-button[hidden] { display: none; }
+.account-button:hover { background: #e2ebff; }
+.google-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #b9bec9;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+.google-button:hover { background: #f8f9fd; border-color: #9299a8; }
+.google-mark { color: #4285f4; font-size: 20px; font-weight: 900; }
+.login-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--muted); font-size: 12px; }
+.login-divider::before, .login-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 form { display: grid; gap: 14px; }
 label { display: grid; gap: 6px; text-align: left; }
 label span { color: var(--muted); font-size: 12px; font-weight: 700; }

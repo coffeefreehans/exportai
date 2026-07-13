@@ -1,7 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { authenticate } from '../middleware/auth';
-import { validate, schemaRegister, schemaLogin, schemaLogout, schemaRefresh, schemaForgotPassword, schemaResetPassword } from '../middleware/validate';
+import { validate, schemaRegister, schemaLogin, schemaGoogleLogin, schemaLogout, schemaRefresh, schemaForgotPassword, schemaResetPassword } from '../middleware/validate';
 import * as authService from '../services/auth.service';
+import { env } from '../config/env';
+import { AppError } from '../utils/errors';
 
 const router = Router();
 
@@ -24,6 +26,16 @@ router.post('/register', validate(schemaRegister), async (req: Request, res: Res
 router.post('/login', validate(schemaLogin), async (req: Request, res: Response) => {
   const { email, password } = req.body;
   const result = await authService.login(email, password);
+  res.status(200).json({
+    code: 200,
+    data: result,
+    message: '登录成功',
+  });
+});
+
+router.post('/google', validate(schemaGoogleLogin), async (req: Request, res: Response) => {
+  if (!env.GOOGLE_CLIENT_ID) throw new AppError(503, 'Google 登录尚未配置');
+  const result = await authService.loginWithGoogle(req.body.accessToken, env.GOOGLE_CLIENT_ID);
   res.status(200).json({
     code: 200,
     data: result,

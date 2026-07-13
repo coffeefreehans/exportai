@@ -7,6 +7,8 @@
   const loginEmail = document.getElementById("loginEmail");
   const loginPassword = document.getElementById("loginPassword");
   const loginSubmit = document.getElementById("loginSubmit");
+  const googleLoginButton = document.getElementById("googleLoginButton");
+  const continueAccountButton = document.getElementById("continueAccountButton");
   const workspaceText = document.getElementById("workspaceText");
   let connecting = false;
 
@@ -73,21 +75,47 @@
     }
   }
 
+  async function googleLoginAndContinue() {
+    googleLoginButton.disabled = true;
+    showPanel(progressPanel, "正在使用 Google 登录 ExportAI...");
+    try {
+      const response = await runtimeSendMessage({ type: "EXPORTAI_ACCOUNT_GOOGLE_LOGIN" });
+      if (!response?.ok) {
+        showPanel(loginPanel, response?.error || "Google 登录失败。", true);
+        return;
+      }
+      await connectNotion();
+    } finally {
+      googleLoginButton.disabled = false;
+    }
+  }
+
+  async function continueStoredAccount() {
+    continueAccountButton.disabled = true;
+    try {
+      await connectNotion();
+    } finally {
+      continueAccountButton.disabled = false;
+    }
+  }
+
   async function init() {
-    const auth = await storageGet(["exportai_access_token", "exportai_notion_connection"]);
+    const auth = await storageGet(["exportai_access_token", "exportai_user_info", "exportai_notion_connection"]);
     if (auth.exportai_notion_connection?.accessToken) {
       workspaceText.textContent = auth.exportai_notion_connection.workspaceName || "Notion 工作区";
       showPanel(successPanel, "Notion 已连接，请继续选择默认保存位置。");
       return;
     }
-    if (!auth.exportai_access_token) {
-      showPanel(loginPanel, "请先登录 ExportAI，然后继续连接 Notion。");
-      return;
+    if (auth.exportai_access_token && auth.exportai_user_info?.email) {
+      continueAccountButton.textContent = `继续使用 ${auth.exportai_user_info.email}`;
+      continueAccountButton.hidden = false;
     }
-    await connectNotion();
+    showPanel(loginPanel, "请先选择 ExportAI 登录方式，然后继续连接 Notion。");
   }
 
   loginForm.addEventListener("submit", loginAndContinue);
+  googleLoginButton.addEventListener("click", googleLoginAndContinue);
+  continueAccountButton.addEventListener("click", continueStoredAccount);
   document.getElementById("closeButton").addEventListener("click", () => window.close());
   document.getElementById("cancelButton").addEventListener("click", () => window.close());
   document.getElementById("chooseTargetButton").addEventListener("click", () => {

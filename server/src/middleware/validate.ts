@@ -41,6 +41,10 @@ export const schemaLogin = z.object({
   password: z.string().min(1, '请输入密码'),
 });
 
+export const schemaGoogleLogin = z.object({
+  accessToken: z.string().min(1, 'accessToken 不能为空'),
+});
+
 export const schemaLogout = z.object({
   refreshToken: z.string().min(1, 'Refresh token 不能为空'),
 });

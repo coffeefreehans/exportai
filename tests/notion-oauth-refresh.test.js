@@ -89,8 +89,15 @@ async function run() {
     const page = await context.newPage();
     await page.goto(`chrome-extension://${extensionId}/src/options/options.html`);
     await page.locator("#tab-integration").click();
+    const connectWindowPromise = context.waitForEvent("page", { timeout: 3000 });
     await page.locator("#notionConnect").click();
-    await page.waitForFunction(() => true);
+    const connectWindow = await connectWindowPromise;
+    await connectWindow.locator("#loginPanel").waitFor({ state: "visible", timeout: 3000 });
+
+    assert.strictEqual(refreshCount, 0, "Stored account data must not refresh until the user chooses that account.");
+    assert.strictEqual(startCount, 0, "Stored account data must not start Notion authorization automatically.");
+    assert.match(String(await connectWindow.locator("#continueAccountButton").textContent()), /1234@test\.com/);
+    await connectWindow.locator("#continueAccountButton").click();
     const deadline = Date.now() + 10000;
     while (startCount < 2 && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 50));
 

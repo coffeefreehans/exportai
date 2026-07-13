@@ -11,6 +11,7 @@ import {
   AuthResult,
 } from './token.service';
 import { sendPasswordResetEmail, sendWelcomeEmail } from './email.service';
+import { GoogleIdentity, verifyGoogleAccessToken } from './google-auth.service';
 
 const SALT_ROUNDS = 12;
 
@@ -89,6 +90,41 @@ export async function login(email: string, password: string): Promise<AuthResult
       createdAt: user.createdAt,
     },
     accessToken,
+    refreshToken,
+  };
+}
+
+export async function loginWithGoogle(
+  accessToken: string,
+  googleClientId: string,
+  verifier: (accessToken: string, clientId: string) => Promise<GoogleIdentity> = verifyGoogleAccessToken
+): Promise<AuthResult> {
+  const identity = await verifier(accessToken, googleClientId);
+  let user = await prisma.user.findUnique({ where: { email: identity.email } });
+
+  if (!user) {
+    const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), SALT_ROUNDS);
+    user = await prisma.user.create({
+      data: {
+        email: identity.email,
+        passwordHash,
+      },
+    });
+  }
+
+  if (!user.isActive) {
+    throw new AppError(401, '账号已被禁用');
+  }
+
+  const accessTokenResult = generateAccessToken(user.id);
+  const refreshToken = await generateRefreshToken(user.id);
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      createdAt: user.createdAt,
+    },
+    accessToken: accessTokenResult,
     refreshToken,
   };
 }

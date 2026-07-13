@@ -34,6 +34,7 @@
       chooseExportFormats: "Choose export formats",
       export: "Export",
       notSignedIn: "Not signed in",
+      sessionExpired: "Your ExportAI login expired. Please sign in again.",
       signedIn: "Signed in",
       checking: "Checking...",
       noActiveTab: "Unable to detect the current tab.",
@@ -67,6 +68,7 @@
       chooseExportFormats: "\u9009\u62e9\u5bfc\u51fa\u683c\u5f0f",
       export: "\u5bfc\u51fa",
       notSignedIn: "\u672a\u767b\u5f55",
+      sessionExpired: "ExportAI \u767b\u5f55\u5df2\u8fc7\u671f\uff0c\u8bf7\u91cd\u65b0\u767b\u5f55\u3002",
       signedIn: "\u5df2\u767b\u5f55",
       checking: "\u68c0\u6d4b\u4e2d...",
       noActiveTab: "\u65e0\u6cd5\u68c0\u6d4b\u5f53\u524d\u6807\u7b7e\u9875\u3002",
@@ -323,6 +325,15 @@
 
     accountText.textContent = auth.user?.email || t("signedIn");
     currentMembership = await getMembership(true).catch(() => ({ isMember: false }));
+    const refreshedAuth = await getAuthState();
+    if (!refreshedAuth.token) {
+      accountText.textContent = t("notSignedIn");
+      loginPanel.hidden = false;
+      summaryNode.hidden = true;
+      exportPanel.hidden = true;
+      setStatus(t("sessionExpired"), "error");
+      return;
+    }
     renderFormatOptions(currentSettings);
     summaryProviderNode.textContent = t("checking");
     summaryChatNameNode.textContent = t("checking");
@@ -447,10 +458,14 @@
   });
   exportButton.addEventListener("click", runExport);
   notionButton.addEventListener("click", async () => {
-    if (exportInProgress || activeTabId === null || notionButton.disabled) return;
+    if (exportInProgress || notionButton.disabled) return;
     if (!currentSettings?.notionTarget?.id) {
       if (globalThis.chrome?.runtime?.openOptionsPage) globalThis.chrome.runtime.openOptionsPage();
       setStatus(t("notionSetupHint"));
+      return;
+    }
+    if (activeTabId === null) {
+      setStatus(t("noActiveTab"), "error");
       return;
     }
     exportInProgress = true;

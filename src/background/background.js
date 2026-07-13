@@ -189,13 +189,8 @@
     if (!chrome.identity?.launchWebAuthFlow) throw new Error("This browser does not support Notion authorization.");
     const redirectUri = chrome.identity.getRedirectURL("notion");
     const state = crypto.randomUUID();
-    const account = await storageGet(["exportai_access_token"]);
-    const accountToken = account.exportai_access_token;
-    if (!accountToken) throw new Error("Sign in to ExportAI before connecting Notion.");
-    const accountHeaders = { Authorization: `Bearer ${accountToken}` };
-    const startResponse = await fetch(`${API_BASE}/api/notion/oauth/start?redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`, { headers: accountHeaders });
-    const startBody = await startResponse.json();
-    if (!startResponse.ok || !startBody?.data?.authorizationUrl) throw new Error(startBody?.message || "Could not start Notion authorization.");
+    const startBody = await apiRequest(`/api/notion/oauth/start?redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`, { method: "GET" });
+    if (!startBody?.data?.authorizationUrl) throw new Error(startBody?.message || "Could not start Notion authorization.");
     const callbackUrl = await new Promise((resolve, reject) => {
       chrome.identity.launchWebAuthFlow({ url: startBody.data.authorizationUrl, interactive: true }, (url) => {
         const error = chrome.runtime.lastError;
@@ -207,13 +202,11 @@
     if (callback.searchParams.get("state") !== state) throw new Error("Invalid Notion authorization state.");
     const code = callback.searchParams.get("code");
     if (!code) throw new Error(callback.searchParams.get("error") || "Notion did not return an authorization code.");
-    const exchangeResponse = await fetch(`${API_BASE}/api/notion/oauth/exchange`, {
+    const exchangeBody = await apiRequest("/api/notion/oauth/exchange", {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...accountHeaders },
       body: JSON.stringify({ code, redirectUri })
     });
-    const exchangeBody = await exchangeResponse.json();
-    if (!exchangeResponse.ok || !exchangeBody?.data?.accessToken) throw new Error(exchangeBody?.message || "Could not finish Notion authorization.");
+    if (!exchangeBody?.data?.accessToken) throw new Error(exchangeBody?.message || "Could not finish Notion authorization.");
     const connection = exchangeBody.data;
     await storageSet({ [NOTION_STORAGE_KEY]: connection });
     return { ok: true, connected: true, workspaceName: connection.workspaceName || "Notion" };

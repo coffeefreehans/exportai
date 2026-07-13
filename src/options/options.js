@@ -368,6 +368,13 @@
     if (currentSettings?.notionTarget?.id) notionTargetNode.value = currentSettings.notionTarget.id;
   }
 
+  function showNotionError(message) {
+    const text = String(message || "Notion connection failed.");
+    notionStatusTextNode.textContent = text;
+    notionStatusNode.classList.add("is-disconnected");
+    setStatus(text);
+  }
+
   function autoExportIntervalMinutesFromSeconds(value) {
     const seconds = Number(value);
     const safeSeconds = Number.isFinite(seconds) ? seconds : 60;
@@ -648,8 +655,13 @@
     notionConnectButton.disabled = true;
     try {
       const response = await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_CONNECT });
-      if (!response?.ok) return setStatus(response?.error || "Notion connection failed.");
+      if (!response?.ok) {
+        showNotionError(response?.error || "Notion connection failed.");
+        return;
+      }
       await refreshNotion();
+    } catch (error) {
+      showNotionError(error?.message || "Notion connection failed.");
     } finally {
       notionConnectButton.disabled = false;
     }

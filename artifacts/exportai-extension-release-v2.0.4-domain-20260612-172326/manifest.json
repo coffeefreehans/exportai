@@ -47,7 +47,7 @@
     "https://www.hailuo.ai/*",
     "https://hailuoai.com/*",
     "https://www.hailuoai.com/*",
-        "https://exportai.followaigc.com/*"
+        "https://exportai.nexscp.com/*"
   ],
   "background": {
     "service_worker": "src/background/background.js"
@@ -67,7 +67,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://exportai.followaigc.com/*"
+        "https://exportai.nexscp.com/*"
       ],
       "js": [
         "src/shared/web-auth-bridge.js"

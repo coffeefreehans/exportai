@@ -1,299 +1,266 @@
 :root {
   color-scheme: light;
-  --bg: #eef3fb;
+  --bg: #f6f8fb;
   --card: #ffffff;
   --panel: #ffffff;
   --panel-2: #f8fafc;
-  --text: #0f172a;
-  --muted: #64748b;
-  --line: #dbe5f2;
-  --accent: #2563eb;
-  --accent-soft: #dbeafe;
-  --accent-strong: #1e3a8a;
-  --danger: #b91c1c;
-  --shadow: rgba(15, 23, 42, 0.06);
+  --text: #111827;
+  --muted: #667085;
+  --line: #e1e6ee;
+  --accent: #1769f6;
+  --accent-soft: #edf4ff;
+  --accent-strong: #1254c6;
+  --danger: #c5221f;
+  --success: #16a34a;
+  --shadow: rgba(15, 23, 42, .08);
 }
 
 :root[data-resolved-theme="dark"] {
   color-scheme: dark;
-  --bg: #0f172a;
-  --card: #111827;
-  --panel: #111827;
-  --panel-2: #1f2937;
-  --text: #e5e7eb;
-  --muted: #94a3b8;
-  --line: #334155;
-  --accent: #60a5fa;
-  --accent-soft: #1e3a8a;
-  --accent-strong: #dbeafe;
-  --danger: #f87171;
-  --shadow: rgba(0, 0, 0, 0.3);
+  --bg: #0f1724;
+  --card: #151e2e;
+  --panel: #151e2e;
+  --panel-2: #1d283a;
+  --text: #f8fafc;
+  --muted: #a8b2c3;
+  --line: #344056;
+  --accent: #4f8cff;
+  --accent-soft: #20345d;
+  --accent-strong: #c8dcff;
+  --danger: #ff9b91;
+  --success: #6ee7a0;
+  --shadow: rgba(0, 0, 0, .34);
 }
+
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, sans-serif;
-  background: var(--bg);
+  min-width: 320px;
+  font-family: Inter, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+  background: radial-gradient(circle at 50% -20%, #fff 0, var(--bg) 50%);
   color: var(--text);
 }
 
 .settings-shell {
   max-width: 1120px;
-  margin: 0 auto;
-  padding: 26px 32px 40px;
+  margin: 36px auto;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--panel);
+  box-shadow: 0 24px 60px var(--shadow);
 }
 
 .hero {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 20px;
-  max-width: 986px;
-  margin-bottom: 18px;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0;
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--line);
 }
+
+.brand-lockup { display: flex; align-items: center; gap: 16px; min-width: 0; }
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 54px;
+  height: 54px;
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(145deg, #2577ff, #0e5be8);
+  box-shadow: 0 10px 24px rgba(23, 105, 246, .24);
+}
+
+.brand-mark svg { width: 32px; height: 32px; fill: currentColor; }
+
+h1 { margin: 0; font-size: 28px; line-height: 1.15; letter-spacing: -.025em; }
+.hero p, .status { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
 
 .account-chip {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--panel);
-  padding: 10px 12px;
+  padding: 8px 10px 8px 14px;
 }
 
-.account-chip strong,
-.account-chip span {
-  display: block;
-  text-align: right;
-}
+.account-chip strong, .account-chip span { display: block; text-align: right; }
+.account-chip strong { max-width: 220px; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.account-chip span { margin-top: 2px; color: var(--muted); font-size: 12px; }
 
-.account-chip strong {
-  font-size: 13px;
-}
-
-.account-chip span {
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 2px;
-}
-
-h1 {
-  margin: 0;
-  font-size: 28px;
-}
-
-.hero p,
-.status {
-  margin: 8px 0 0;
-  color: var(--muted);
-}
-
-.settings-form {
-  display: block;
-}
-
-.settings-layout {
-  display: grid;
-  grid-template-columns: 188px minmax(0, 1fr);
-  gap: 18px;
-  align-items: start;
-}
+.settings-form { display: block; }
+.settings-layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); align-items: stretch; min-height: 650px; }
 
 .settings-tabs {
   position: sticky;
-  top: 18px;
+  top: 0;
   display: grid;
-  gap: 6px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
+  align-content: start;
+  gap: 8px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
   background: var(--panel);
-  padding: 8px;
-  box-shadow: 0 10px 26px var(--shadow);
+  padding: 30px 18px;
+  box-shadow: none;
 }
 
 .tab-button {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  min-height: 42px;
+  gap: 14px;
+  min-height: 52px;
   border: 0;
   border-radius: 12px;
   background: transparent;
   color: var(--muted);
-  padding: 0 14px;
+  padding: 0 18px;
   cursor: pointer;
-  font-weight: 800;
-  letter-spacing: 0;
+  font-size: 15px;
+  font-weight: 700;
   white-space: nowrap;
+  transition: background .15s ease, color .15s ease, transform .15s ease;
 }
 
-.tab-button.is-active {
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-}
-
-.tab-button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.card {
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--card);
-  padding: 22px 24px;
-  box-shadow: 0 10px 26px var(--shadow);
-}
+.tab-button svg { width: 22px; height: 22px; fill: currentColor; }
+.tab-button:hover { background: var(--panel-2); color: var(--text); transform: translateX(1px); }
+.tab-button.is-active { background: var(--accent-soft); color: var(--accent); }
 
 .settings-panel {
   width: 100%;
-  max-width: 780px;
-  min-height: 360px;
-  box-sizing: border-box;
+  max-width: none;
+  min-height: 650px;
+  border: 0;
+  border-radius: 0;
+  background: var(--card);
+  padding: 38px 42px 48px;
+  box-shadow: none;
 }
 
-.settings-panel[hidden] {
-  display: none !important;
-}
-
-.card h2 {
-  margin: 0 0 18px;
-  font-size: 18px;
-}
+.settings-panel[hidden] { display: none !important; }
+.card h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 26px; font-size: 27px; letter-spacing: -.02em; }
 
 .group-title {
-  margin: 16px 0 8px;
-  font-size: 12px;
+  margin: 28px 0 12px;
+  color: var(--text);
+  font-size: 13px;
   font-weight: 800;
-  color: var(--muted);
-  text-transform: uppercase;
+  text-transform: none;
 }
 
-.field,
-.check,
-.radio {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 9px 0;
-  font-size: 14px;
-}
+.field, .check, .radio { display: flex; align-items: center; gap: 10px; margin: 11px 0; font-size: 14px; }
+.field { justify-content: space-between; max-width: 680px; min-height: 42px; }
+.field span { color: var(--muted); font-weight: 650; }
+.check, .radio { width: fit-content; cursor: pointer; color: var(--text); }
 
-.field {
-  justify-content: space-between;
-  max-width: 640px;
-}
+input[type="checkbox"], input[type="radio"] { width: 17px; height: 17px; margin: 0; accent-color: var(--accent); }
 
-.field span {
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.setting-hint {
-  max-width: 640px;
-  margin: 8px 0 12px;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-input[type="text"],
-input[type="number"],
-select {
-  width: 240px;
-  min-width: 240px;
+input[type="text"], input[type="number"], select {
+  width: 280px;
+  min-width: 280px;
+  min-height: 42px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: var(--panel-2);
-  color: var(--text);
-  padding: 9px 10px;
-}
-
-.ghost-button {
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  outline: 0;
   background: var(--panel);
   color: var(--text);
-  padding: 10px 14px;
-  cursor: pointer;
-  font-weight: 700;
+  padding: 9px 12px;
+  font: inherit;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 
-.danger-button {
-  color: var(--danger);
+input[type="text"]:focus, input[type="number"]:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent); }
+
+.setting-hint { max-width: 680px; margin: 8px 0 14px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+
+.ghost-button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 9px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
 }
+
+.ghost-button:hover { border-color: #b5c0d0; background: var(--panel-2); transform: translateY(-1px); }
+.danger-button { color: var(--danger); }
 
 .badge {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 3px 8px;
-  font-size: 12px;
-  color: var(--accent-strong);
+  padding: 4px 10px;
+  color: var(--accent);
   background: var(--accent-soft);
-}
-
-.format-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  max-width: 650px;
-}
-
-.format-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 7px 10px;
-  background: var(--panel-2);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 750;
 }
 
-.paid-card.is-locked {
-  opacity: 0.68;
+.notion-card { max-width: 680px; border: 1px solid var(--line); border-radius: 16px; padding: 22px; background: var(--panel); box-shadow: 0 10px 24px rgba(15, 23, 42, .04); }
+.notion-card__header { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; align-items: center; gap: 14px; }
+
+.notion-mark {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border: 2px solid currentColor;
+  border-radius: 7px;
+  background: var(--text);
+  color: var(--panel);
+  transform: rotate(-2deg);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--text) 45%, transparent);
 }
 
-@media (max-width: 760px) {
-  .hero {
-    align-items: flex-start;
-    flex-direction: column;
-  }
+.notion-mark span { font-family: Georgia, serif; font-size: 32px; font-weight: 900; }
+.notion-card__identity strong { display: block; font-size: 18px; }
+.notion-status { display: flex; align-items: center; gap: 7px; margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+.notion-status__dot { display: inline-grid; place-items: center; width: 18px; height: 18px; border: 2px solid #22c55e; border-radius: 50%; color: var(--success); font-size: 10px; font-weight: 900; }
+.notion-status.is-disconnected .notion-status__dot { border-color: var(--muted); color: var(--muted); }
+.notion-action { min-width: 100px; }
+.notion-card__divider { height: 1px; margin: 22px 0 16px; background: var(--line); }
+.notion-target-field { max-width: none; }
 
-  .account-chip {
-    width: 100%;
-    box-sizing: border-box;
-    justify-content: space-between;
-  }
+.notion-privacy { display: flex; align-items: center; gap: 11px; margin-top: 18px; border-radius: 11px; background: var(--accent-soft); color: var(--accent-strong); padding: 14px 16px; font-size: 12px; line-height: 1.5; }
+.notion-privacy svg { flex: 0 0 auto; width: 23px; height: 23px; fill: currentColor; }
 
-  .settings-panel {
-    max-width: none;
-    min-height: auto;
-  }
+.format-row { display: flex; flex-wrap: wrap; gap: 8px; max-width: 700px; }
+.format-pill { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; background: var(--panel-2); font-size: 12px; font-weight: 750; cursor: pointer; }
 
-  .settings-layout {
-    grid-template-columns: 1fr;
-  }
+.paid-card.is-locked { opacity: .68; }
 
-  .settings-tabs {
-    position: static;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+button:focus-visible, .tab-button:focus-visible, label:has(input:focus-visible) { outline: 3px solid color-mix(in srgb, var(--accent) 28%, transparent); outline-offset: 2px; }
 
-  .field {
-    align-items: stretch;
-    flex-direction: column;
-  }
+@media (max-width: 820px) {
+  .settings-shell { margin: 0; border: 0; border-radius: 0; }
+  .hero { align-items: flex-start; flex-direction: column; padding: 20px; }
+  .account-chip { width: 100%; justify-content: flex-end; }
+  .settings-layout { grid-template-columns: 1fr; min-height: auto; }
+  .settings-tabs { position: static; grid-template-columns: repeat(4, minmax(0, 1fr)); border-right: 0; border-bottom: 1px solid var(--line); padding: 10px; }
+  .tab-button { justify-content: center; gap: 7px; padding: 0 8px; font-size: 12px; }
+  .tab-button svg { width: 18px; height: 18px; }
+  .settings-panel { min-height: auto; padding: 26px 20px 36px; }
+}
 
-  input[type="text"],
-  input[type="number"],
-  select {
-    min-width: 0;
-    width: 100%;
-    box-sizing: border-box;
-  }
+@media (max-width: 560px) {
+  .brand-mark { width: 46px; height: 46px; }
+  h1 { font-size: 23px; }
+  .account-chip { flex-wrap: wrap; }
+  .settings-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .field { align-items: stretch; flex-direction: column; }
+  input[type="text"], input[type="number"], select { width: 100%; min-width: 0; }
+  .notion-card__header { grid-template-columns: 50px minmax(0, 1fr); }
+  .notion-action { grid-column: 1 / -1; width: 100%; }
 }

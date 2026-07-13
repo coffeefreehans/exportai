@@ -5,6 +5,10 @@ const path = require("path");
 const { chromium } = require("C:/Users/Administrator/node_modules/playwright");
 
 const projectRoot = path.join(__dirname, "..");
+const popupSource = fs.readFileSync(path.join(projectRoot, "src", "popup", "popup.js"), "utf8");
+const webUrlMatch = popupSource.match(/const WEB_URL = "([^"]+)"/);
+assert(webUrlMatch, "popup must define WEB_URL for auth bridge verification.");
+const webUrl = webUrlMatch[1];
 
 async function launchExtension() {
   const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "exportai-auth-sync-"));
@@ -31,7 +35,7 @@ async function getExtensionStorage(extensionPage, keys = null) {
 (async () => {
   const { context, extensionId } = await launchExtension();
   try {
-    await context.route("http://localhost:3002/**", (route) => route.fulfill({
+    await context.route(`${webUrl}/**`, (route) => route.fulfill({
       status: 200,
       contentType: "text/html",
       body: "<!doctype html><html><body><h1>ExportAI Web</h1></body></html>"
@@ -50,7 +54,7 @@ async function getExtensionStorage(extensionPage, keys = null) {
     }));
 
     const page = await context.newPage();
-    await page.goto("http://localhost:3002/account");
+    await page.goto(`${webUrl}/account?extension_callback=1`);
     await page.waitForTimeout(800);
     let localState = await page.evaluate(() => ({
       token: localStorage.getItem("exportai_access_token"),
@@ -93,8 +97,8 @@ async function getExtensionStorage(extensionPage, keys = null) {
       token: localStorage.getItem("exportai_access_token"),
       membership: localStorage.getItem("exportai_membership")
     }));
-    assert.strictEqual(localState.token, null, "extension logout must clear web token.");
-    assert.strictEqual(localState.membership, null, "extension logout must clear web membership.");
+    assert.strictEqual(localState.token, "web-token", "an active web login must survive an extension-side logout marker.");
+    assert(localState.membership, "an active web membership must survive an extension-side logout marker.");
 
     await page.evaluate(() => {
       localStorage.setItem("exportai_access_token", "web-token-2");

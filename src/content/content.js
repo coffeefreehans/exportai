@@ -11,6 +11,8 @@
     MSG_WARMUP_PDF_RENDERER,
     MSG_GET_CHAT_STATUS,
     MSG_EXPORT_CHAT,
+    MSG_EXPORT_NOTION,
+    MSG_NOTION_CREATE_PAGE,
     MSG_AUTO_EXPORT_CHAT,
     MSG_GET_INTEGRATION_STATUS,
     EXPORT_FORMATS,
@@ -2231,6 +2233,60 @@
     }
   }
 
+  function notionTextChunks(value) {
+    const text = stripHtmlToText(String(value || "")).trim();
+    if (!text) return [""];
+    const chunks = [];
+    for (let index = 0; index < text.length; index += 1900) chunks.push(text.slice(index, index + 1900));
+    return chunks;
+  }
+
+  function notionRichText(content, link) {
+    const text = { content: String(content || "").slice(0, 2000) };
+    if (link) text.link = { url: String(link).slice(0, 2000) };
+    return [{ type: "text", text }];
+  }
+
+  function conversationToNotionBlocks(conversation) {
+    const blocks = [];
+    const sourceUrl = String(conversation?.url || conversation?.sourceUrl || location.href || "");
+    if (sourceUrl) blocks.push({ object: "block", type: "bookmark", bookmark: { url: sourceUrl.slice(0, 2000) } });
+    blocks.push({ object: "block", type: "callout", callout: { icon: { type: "emoji", emoji: "🤖" }, rich_text: notionRichText(`Source: ${conversation?.providerName || conversation?.provider || "AI chat"}\nExported: ${new Date().toLocaleString()}`) } });
+    (conversation?.messages || []).forEach((message) => {
+      const role = String(message?.role || "assistant").toLowerCase();
+      const label = role === "human" || role === "user" ? "You" : "AI";
+      blocks.push({ object: "block", type: "heading_2", heading_2: { rich_text: notionRichText(label) } });
+      const raw = message?.markdown || message?.text || message?.content || message?.html || "";
+      notionTextChunks(raw).forEach((chunk) => blocks.push({ object: "block", type: "paragraph", paragraph: { rich_text: notionRichText(chunk) } }));
+      const code = message?.code || message?.codeText;
+      if (code) notionTextChunks(code).forEach((chunk) => blocks.push({ object: "block", type: "code", code: { language: "plain text", rich_text: notionRichText(chunk) } }));
+    });
+    return blocks;
+  }
+
+  async function exportCurrentChatToNotion() {
+    const provider = getActiveProvider();
+    if (!provider || !isProviderReadyForExport()) throw new Error("No active chat detected on this page.");
+    if (exportInProgress) throw new Error("An export is already in progress.");
+    exportInProgress = true;
+    try {
+      const settings = await root.storage.getSettings();
+      if (!settings.notionTarget?.id) throw new Error("Choose a Notion destination in ExportAI Settings first.");
+      await assertAllowedFormatsForMembership([EXPORT_FORMATS.MD]);
+      const conversation = await buildProcessedConversation(provider, settingsForVisualExport(settings), { hydrateVirtualized: true, maxHydrationMs: resolveHydrationTimeoutMs(settings) });
+      if (!conversation.messages.length) throw new Error("No exportable messages found in current chat.");
+      const title = conversation.chatName || conversation.title || conversation.summary?.chatName || document.title || "AI conversation";
+      const signature = `${location.href}|${conversation.messages.length}|${String(conversation.messages.at(-1)?.text || conversation.messages.at(-1)?.content || "").slice(-80)}`;
+      const requestId = Array.from(new TextEncoder().encode(signature)).reduce((hash, value) => ((hash * 31) + value) >>> 0, 0).toString(16);
+      const response = await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_CREATE_PAGE, payload: { target: settings.notionTarget, title, requestId, blocks: conversationToNotionBlocks(conversation) } });
+      if (!response?.ok) throw new Error(response?.error || "Notion export failed.");
+      return response;
+    } finally {
+      exportInProgress = false;
+      scheduleInlineUiRefresh();
+    }
+  }
+
   async function getChatStatus() {
     const provider = getActiveProvider();
 
@@ -2292,6 +2348,11 @@
           .then((result) => sendResponse({ ok: true, result }))
           .catch((error) => sendResponse({ ok: false, error: error.message }));
 
+        return true;
+      }
+
+      if (message.type === MSG_EXPORT_NOTION) {
+        exportCurrentChatToNotion().then((result) => sendResponse({ ok: true, result })).catch((error) => sendResponse({ ok: false, error: error.message }));
         return true;
       }
 

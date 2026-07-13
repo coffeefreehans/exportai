@@ -21,6 +21,8 @@ const envSchema = z.object({
   STRIPE_PRICE_MONTHLY: z.string().min(1, 'STRIPE_PRICE_MONTHLY is required'),
   STRIPE_PRICE_YEARLY: z.string().min(1, 'STRIPE_PRICE_YEARLY is required'),
   STRIPE_PRICE_LIFETIME: z.string().min(1, 'STRIPE_PRICE_LIFETIME is required'),
+  NOTION_CLIENT_ID: z.string().optional(),
+  NOTION_CLIENT_SECRET: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

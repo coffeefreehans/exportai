@@ -1,0 +1,26 @@
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const root = path.resolve(__dirname, '..');
+const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
+const background = fs.readFileSync(path.join(root, 'src/background/background.js'), 'utf8');
+const content = fs.readFileSync(path.join(root, 'src/content/content.js'), 'utf8');
+const options = fs.readFileSync(path.join(root, 'src/options/options.js'), 'utf8');
+const optionsHtml = fs.readFileSync(path.join(root, 'src/options/options.html'), 'utf8');
+const server = fs.readFileSync(path.join(root, 'server/src/routes/notion.ts'), 'utf8');
+
+assert(manifest.permissions.includes('identity'), 'Notion OAuth requires the browser identity permission.');
+assert(manifest.host_permissions.includes('https://api.notion.com/*'), 'Extension must be allowed to call Notion directly.');
+assert(background.includes('chrome.identity.launchWebAuthFlow'), 'Background must run the OAuth flow.');
+assert(background.includes('NOTION_VERSION = "2026-03-11"'), 'Notion calls must use the current API version.');
+assert(background.includes('remaining.slice(index, index + 100)'), 'Long chats must be appended in blocks of at most 100.');
+assert(background.includes('exportai_notion_export_'), 'Exports must keep an idempotency record.');
+assert(content.includes('conversationToNotionBlocks'), 'Content script must build structured Notion blocks.');
+assert(content.includes('MSG_EXPORT_NOTION'), 'Content script must expose the Notion export action.');
+assert(options.includes('MSG_NOTION_TARGETS'), 'Settings must load selectable Notion destinations.');
+assert(options.includes('status?.workspaceName') && options.includes('notionConnectedTo'), 'Settings must render the workspace returned by OAuth.');
+assert(options.includes('titleProperty') && options.includes('notionTarget'), 'Settings must persist the selected page/database target metadata.');
+assert(options.includes('MSG_NOTION_DISCONNECT') && options.includes('saveSettings({ notionTarget: null })'), 'Disconnect must clear both the token and selected target.');
+assert(optionsHtml.includes('id="notionStatusText"') && optionsHtml.includes('data-i18n="notionPrivacy"'), 'Settings must show live connection state and the direct-transfer privacy notice.');
+assert(server.includes("https://api.notion.com/v1/oauth/token"), 'Server must exchange OAuth codes without proxying chat content.');
+console.log('notion export regression passed');

@@ -2,6 +2,7 @@
   "use strict";
 
   const AUTH_LOGOUT_KEY = "exportai_auth_logout_at";
+  const EXTENSION_CALLBACK_SESSION_KEY = "exportai_extension_callback_session";
   const KEYS = [
     "exportai_access_token",
     "exportai_refresh_token",
@@ -11,6 +12,19 @@
 
   let lastLocalSnapshot = "";
   let applyingRemote = false;
+
+  function isExtensionCallbackSession() {
+    try {
+      const params = new URLSearchParams(location.search);
+      if (params.get("extension_callback") === "1") {
+        sessionStorage.setItem(EXTENSION_CALLBACK_SESSION_KEY, "1");
+        return true;
+      }
+      return sessionStorage.getItem(EXTENSION_CALLBACK_SESSION_KEY) === "1";
+    } catch (_error) {
+      return false;
+    }
+  }
 
   function chromeLocal() {
     return globalThis.chrome?.storage?.local || null;
@@ -88,7 +102,7 @@
 
   function syncLocalToChrome(reason = "change") {
     const storage = chromeLocal();
-    if (!storage || applyingRemote) return;
+    if (!storage || applyingRemote || !isExtensionCallbackSession()) return;
 
     const currentValues = {};
     const removedKeys = [];
@@ -117,7 +131,7 @@
 
   function syncChromeToLocalInitial() {
     const storage = chromeLocal();
-    if (!storage) return;
+    if (!storage || !isExtensionCallbackSession()) return;
     storage.get([...KEYS, AUTH_LOGOUT_KEY], (stored) => {
       const remoteValues = {};
       KEYS.forEach((key) => {
@@ -145,6 +159,7 @@
   }
 
   function handleRemoteChange(changes, areaName) {
+    if (!isExtensionCallbackSession()) return;
     if (areaName !== "local") return;
 
     if (changes[AUTH_LOGOUT_KEY]?.newValue) {
@@ -179,7 +194,6 @@
   syncLocalToChrome("initial");
   syncChromeToLocalInitial();
 
-  chromeLocal()?.onChanged?.addListener?.(handleRemoteChange);
   globalThis.chrome?.storage?.onChanged?.addListener?.(handleRemoteChange);
 
   window.addEventListener("storage", (event) => {

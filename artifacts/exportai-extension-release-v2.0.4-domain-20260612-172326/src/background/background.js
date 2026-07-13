@@ -24,7 +24,7 @@
   const MSG_PDF_TAB_HTML_READY = "CHAT_EXPORT_AI_PDF_TAB_HTML_READY";
 
   const PDF_RENDER_TAB_PATH = "src/background/pdf-render-tab.html";
-  const API_BASE = "https://exportai.followaigc.com";
+  const API_BASE = "https://exportai.nexscp.com";
   const MEMBERSHIP_STORAGE_KEY = "exportai_membership";
   const FS_DIRECTORY_DB_NAME = "exportai-file-system-access";
   const FS_DIRECTORY_STORE_NAME = "handles";
@@ -233,7 +233,7 @@
     }
 
     if (permission === "denied") {
-      throw new Error("保存目录权限已被浏览器拒绝。请重新手动导出并选择目录。");
+      throw new Error("保存目录权限已被浏览器拒绝。请重新手动导出并选择目录�?);
     }
 
     if (typeof directoryHandle.requestPermission === "function") {
@@ -261,7 +261,7 @@
       return await fileHandle.createWritable(options);
     } catch (error) {
       if (isFileSystemPermissionError(error)) {
-        throw new Error("保存目录权限已失效。请在 Ask for location 手动导出时重新选择目录。");
+        throw new Error("保存目录权限已失效。请�?Ask for location 手动导出时重新选择目录�?);
       }
 
       throw error;
@@ -271,7 +271,7 @@
   async function writeFilesToSavedDirectory(files) {
     const directoryHandle = await getStoredDirectoryHandle();
     if (!directoryHandle) {
-      throw new Error("未保存下载目录。请先在 Ask for location 手动导出时选择一次目录。");
+      throw new Error("未保存下载目录。请先在 Ask for location 手动导出时选择一次目录�?);
     }
 
     await assertDirectoryWritablePermission(directoryHandle);
@@ -308,7 +308,7 @@
 
     const directoryHandle = await getStoredDirectoryHandle();
     if (!directoryHandle) {
-      throw new Error("未保存下载目录。请先在 Ask for location 手动导出时选择一次目录。");
+      throw new Error("未保存下载目录。请先在 Ask for location 手动导出时选择一次目录�?);
     }
 
     if (action === "start") {

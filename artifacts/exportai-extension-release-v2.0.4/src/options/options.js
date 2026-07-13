@@ -1,7 +1,7 @@
 (() => {
   const root = globalThis.ChatExportAi;
   const { EXPORT_FORMATS, MSG_CHECK_MEMBERSHIP } = root.constants;
-  const WEB_URL = "https://exportai.followaigc.com";
+  const WEB_URL = "https://exportai.nexscp.com";
   const AUTO_EXPORT_FEATURE_ENABLED = false;
   const FORMAT_OPTIONS = [
     [EXPORT_FORMATS.TXT, "TXT"],
@@ -109,7 +109,7 @@
     "zh-CN": {
       title: "ExportAI 设置",
       accountButton: "账号",
-      logoutButton: "退出",
+      logoutButton: "退�?,
       tabGeneral: "通用",
       tabExport: "导出",
       tabFiles: "文件",
@@ -120,27 +120,27 @@
       themeLight: "浅色",
       themeDark: "深色",
       language: "语言",
-      reasoningTime: "推理与时间",
+      reasoningTime: "推理与时�?,
       includeThinking: "导出可见推理",
       includeThinkingDuration: "导出推理耗时",
       includeMessageTime: "导出消息时间",
-      referencesAttachments: "引用与附件",
+      referencesAttachments: "引用与附�?,
       userAttachments: "用户附件",
-      assistantUserRefs: "助手引用的用户文件",
-      assistantGeneratedFiles: "助手生成的文件",
+      assistantUserRefs: "助手引用的用户文�?,
+      assistantGeneratedFiles: "助手生成的文�?,
       webReferences: "网络引用",
       exportTitle: "导出",
       txtExport: "TXT 导出",
       humanName: "用户名称",
       aiName: "AI 名称",
       textFormatting: "文本格式",
-      cleanText: "纯文本",
+      cleanText: "纯文�?,
       multilineStyle: "多行样式",
       tab: "缩进",
       name: "名称",
-      none: "无",
-      metadata: "元数据",
-      enableMetadata: "启用元数据",
+      none: "�?,
+      metadata: "元数�?,
+      enableMetadata: "启用元数�?,
       exportTitleToggle: "导出标题",
       date: "日期",
       model: "模型",
@@ -152,32 +152,32 @@
       downloadFolder: "保存到下载文件夹",
       customSubfolder: "保存到下载目录内的自定义子文件夹",
       askLocation: "询问保存位置",
-      customSubfolderLabel: "自定义子文件夹",
+      customSubfolderLabel: "自定义子文件�?,
       conflictAction: "冲突处理",
       overwrite: "覆盖",
       keepBoth: "保留两个",
       integrationTitle: "集成",
       paid: "付费",
-      paidActive: "付费已激活",
-      inPageExportButton: "页面内导出按钮",
-      enableFloatingExport: "启用可拖动浮动导出",
-      exportRuntime: "导出运行时",
+      paidActive: "付费已激�?,
+      inPageExportButton: "页面内导出按�?,
+      enableFloatingExport: "启用可拖动浮动导�?,
+      exportRuntime: "导出运行�?,
       enableAutoExport: "启用自动导出",
       autoExportMode: "自动导出模式",
-      onChange: "内容变化时",
-      everyNMinutes: "每 N 分钟",
-      intervalMinutes: "间隔分钟数",
-      autoExportManualSeedHint: "自动导出只会在当前对话手动导出过一次后启动，并复用上次保存的文件名静默覆盖。",
+      onChange: "内容变化�?,
+      everyNMinutes: "�?N 分钟",
+      intervalMinutes: "间隔分钟�?,
+      autoExportManualSeedHint: "自动导出只会在当前对话手动导出过一次后启动，并复用上次保存的文件名静默覆盖�?,
       freeAccount: "免费账号",
       lifetimeMember: "永久会员",
       yearlyMember: "年度会员",
       monthlyMember: "月度会员",
       paidMember: "付费会员",
-      signedIn: "已登录",
-      notSignedIn: "未登录",
-      signInToSync: "登录后同步设置",
-      initialStatus: "先加载本地设置，然后同步到账号。",
-      settingsSynced: "设置已同步。",
+      signedIn: "已登�?,
+      notSignedIn: "未登�?,
+      signInToSync: "登录后同步设�?,
+      initialStatus: "先加载本地设置，然后同步到账号�?,
+      settingsSynced: "设置已同步�?,
       localLoaded: "本地设置已加载，正在同步账号..."
     }
   };
@@ -577,7 +577,7 @@
   tabButtons.forEach((button) => {
     button.addEventListener("click", () => activateTab(button.dataset.tab));
   });
-  loginButton.addEventListener("click", () => openUrl(`${WEB_URL}/account`));
+  loginButton.addEventListener("click", () => openUrl(`${WEB_URL}/account?extension_callback=1`));
   logoutButton?.addEventListener("click", () => {
     chrome.storage.local.set({ [AUTH_LOGOUT_KEY]: new Date().toISOString() }, () => {
       chrome.storage.local.remove(AUTH_KEYS, () => {

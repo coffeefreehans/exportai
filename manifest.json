@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
-  "version": "2.0.4",
+  "version": "2.0.6",
   "default_locale": "en",
   "description": "__MSG_extensionDescription__",
   "icons": {
@@ -11,13 +11,13 @@
   },
   "permissions": [
     "activeTab",
-    "scripting",
     "storage",
     "downloads",
     "alarms",
     "tabs",
     "debugger",
-    "pageCapture"
+    "pageCapture",
+    "identity"
   ],
   "host_permissions": [
     "https://claude.ai/*",
@@ -47,7 +47,8 @@
     "https://www.hailuo.ai/*",
     "https://hailuoai.com/*",
     "https://www.hailuoai.com/*",
-        "https://exportai.followaigc.com/*"
+    "https://exportai.nexscp.com/*",
+    "https://api.notion.com/*"
   ],
   "background": {
     "service_worker": "src/background/background.js"
@@ -67,7 +68,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://exportai.followaigc.com/*"
+        "https://exportai.nexscp.com/*"
       ],
       "js": [
         "src/shared/web-auth-bridge.js"

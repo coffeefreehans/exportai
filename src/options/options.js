@@ -1,7 +1,7 @@
 (() => {
   const root = globalThis.ChatExportAi;
-  const { EXPORT_FORMATS, MSG_CHECK_MEMBERSHIP } = root.constants;
-  const WEB_URL = "https://exportai.followaigc.com";
+  const { EXPORT_FORMATS, MSG_CHECK_MEMBERSHIP, MSG_NOTION_CONNECT, MSG_NOTION_DISCONNECT, MSG_NOTION_STATUS, MSG_NOTION_TARGETS } = root.constants;
+  const WEB_URL = "https://exportai.nexscp.com";
   const AUTO_EXPORT_FEATURE_ENABLED = false;
   const FORMAT_OPTIONS = [
     [EXPORT_FORMATS.TXT, "TXT"],
@@ -22,6 +22,11 @@
   const logoutButton = document.getElementById("logoutButton");
   const integrationFormatsNode = document.getElementById("integrationFormats");
   const autoExportFormatsNode = document.getElementById("autoExportFormats");
+  const notionConnectButton = document.getElementById("notionConnect");
+  const notionDisconnectButton = document.getElementById("notionDisconnect");
+  const notionTargetNode = document.getElementById("notionTarget");
+  const notionStatusNode = document.getElementById("notionStatus");
+  const notionStatusTextNode = document.getElementById("notionStatusText");
   const tabButtons = Array.from(document.querySelectorAll("[data-tab]"));
   const tabPanels = Array.from(document.querySelectorAll("[data-panel]"));
   const AUTH_KEYS = [
@@ -33,6 +38,14 @@
   const AUTH_LOGOUT_KEY = "exportai_auth_logout_at";
   const LANGUAGE_TEXT = {
     en: {
+      notionConnect: "Connect",
+      notionDisconnect: "Disconnect",
+      notionNotConnected: "Not connected",
+      notionConnectedTo: "Connected to {workspace}",
+      notionDefaultDestination: "Default destination",
+      notionConnectFirst: "Connect Notion first",
+      notionChooseDestination: "Choose a page or database",
+      notionPrivacy: "Chat content is sent directly from your browser to Notion. ExportAI does not store message content.",
       title: "ExportAI Settings",
       accountButton: "Account",
       logoutButton: "Logout",
@@ -107,6 +120,14 @@
       localLoaded: "Local settings loaded. Syncing account in background..."
     },
     "zh-CN": {
+      notionConnect: "\u8fde\u63a5",
+      notionDisconnect: "\u65ad\u5f00\u8fde\u63a5",
+      notionNotConnected: "\u672a\u8fde\u63a5",
+      notionConnectedTo: "\u5df2\u8fde\u63a5\u5230 {workspace}",
+      notionDefaultDestination: "\u9ed8\u8ba4\u4fdd\u5b58\u4f4d\u7f6e",
+      notionConnectFirst: "\u8bf7\u5148\u8fde\u63a5 Notion",
+      notionChooseDestination: "\u9009\u62e9\u9875\u9762\u6216\u6570\u636e\u5e93",
+      notionPrivacy: "\u5bf9\u8bdd\u5185\u5bb9\u7531\u6d4f\u89c8\u5668\u76f4\u63a5\u53d1\u9001\u5230 Notion\uff0cExportAI \u4e0d\u5b58\u50a8\u6b63\u6587\u3002",
       title: "ExportAI 设置",
       accountButton: "账号",
       logoutButton: "退出",
@@ -319,6 +340,34 @@
     if (node) node.value = value ?? "";
   }
 
+  async function refreshNotion() {
+    const status = await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_STATUS });
+    const connected = Boolean(status?.connected);
+    const workspaceName = status?.workspaceName || "Notion";
+    notionStatusTextNode.textContent = connected
+      ? t("notionConnectedTo").replace("{workspace}", workspaceName)
+      : t("notionNotConnected");
+    notionStatusNode.classList.toggle("is-disconnected", !connected);
+    notionConnectButton.hidden = Boolean(status?.connected);
+    notionDisconnectButton.hidden = !status?.connected;
+    notionTargetNode.disabled = !status?.connected || !membership.isMember;
+    if (!status?.connected) {
+      notionTargetNode.replaceChildren(new Option(t("notionConnectFirst"), ""));
+      return;
+    }
+    const response = await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_TARGETS });
+    if (!response?.ok) throw new Error(response?.error || "Could not load Notion destinations.");
+    notionTargetNode.replaceChildren();
+    notionTargetNode.add(new Option(t("notionChooseDestination"), ""));
+    response.targets.forEach((target) => {
+      const option = new Option(target.title, target.id);
+      option.dataset.type = target.type;
+      option.dataset.titleProperty = target.titleProperty || "title";
+      notionTargetNode.add(option);
+    });
+    if (currentSettings?.notionTarget?.id) notionTargetNode.value = currentSettings.notionTarget.id;
+  }
+
   function autoExportIntervalMinutesFromSeconds(value) {
     const seconds = Number(value);
     const safeSeconds = Number.isFinite(seconds) ? seconds : 60;
@@ -402,6 +451,7 @@
       if (saveMode) saveMode.checked = true;
       setValue("customDownloadFolder", settings.customDownloadFolder);
       setValue("autosaveConflictAction", settings.autosaveConflictAction);
+      if (settings.notionTarget?.id) notionTargetNode.value = settings.notionTarget.id;
       setChecked("showHeaderExportButton", settings.showHeaderExportButton);
       setChecked("autoExportEnabled", AUTO_EXPORT_FEATURE_ENABLED && settings.autoExportEnabled);
       setValue("autoExportMode", settings.autoExportMode);
@@ -456,6 +506,7 @@
       saveMode,
       customDownloadFolder: document.getElementById("customDownloadFolder").value,
       autosaveConflictAction: document.getElementById("autosaveConflictAction").value,
+      notionTarget: notionTargetNode.value ? { id: notionTargetNode.value, type: notionTargetNode.selectedOptions[0]?.dataset.type || "page", titleProperty: notionTargetNode.selectedOptions[0]?.dataset.titleProperty || "title", title: notionTargetNode.selectedOptions[0]?.textContent || "" } : (currentSettings?.notionTarget || null),
       showHeaderExportButton: isMember
         ? document.getElementById("showHeaderExportButton").checked
         : Boolean(currentSettings?.showHeaderExportButton),
@@ -532,6 +583,10 @@
         root.appTheme.applyThemeDocument(settings.appTheme);
         applySettings(settings);
       }
+      await refreshNotion().catch((error) => {
+        notionStatusTextNode.textContent = error.message;
+        notionStatusNode.classList.add("is-disconnected");
+      });
       setStatus(t("settingsSynced"));
     } catch (error) {
       setStatus(`Local settings loaded. Account sync failed: ${error.message}`);
@@ -563,6 +618,10 @@
     settingsReady = true;
     setStatus(t("localLoaded"));
     refreshAccountStateInBackground(auth);
+    refreshNotion().catch((error) => {
+      notionStatusTextNode.textContent = error.message;
+      notionStatusNode.classList.add("is-disconnected");
+    });
   }
 
   form.addEventListener("input", scheduleSave);
@@ -584,6 +643,21 @@
         location.reload();
       });
     });
+  });
+  notionConnectButton?.addEventListener("click", async () => {
+    notionConnectButton.disabled = true;
+    try {
+      const response = await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_CONNECT });
+      if (!response?.ok) return setStatus(response?.error || "Notion connection failed.");
+      await refreshNotion();
+    } finally {
+      notionConnectButton.disabled = false;
+    }
+  });
+  notionDisconnectButton?.addEventListener("click", async () => {
+    await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_DISCONNECT });
+    currentSettings = await root.storage.saveSettings({ notionTarget: null });
+    await refreshNotion();
   });
 
   init().catch((error) => setStatus(`Settings page error: ${error.message}`));

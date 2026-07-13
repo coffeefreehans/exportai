@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "ExportAI - AI Conversation Exporter",
+    "description": "Extension name shown in browser extension stores and extension UI."
+  },
+  "extensionDescription": {
+    "message": "Export AI conversations in one click with multi-platform and multi-format export.",
+    "description": "Short extension description shown in browser extension stores."
+  }
+}

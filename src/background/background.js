@@ -18,13 +18,20 @@
   const MSG_WRITE_FILES_TO_DIRECTORY = "EXPORTAI_WRITE_FILES_TO_DIRECTORY";
   const MSG_WRITE_FILE_TO_DIRECTORY_CHUNK = "EXPORTAI_WRITE_FILE_TO_DIRECTORY_CHUNK";
   const PORT_WRITE_DIRECTORY_FILE = "EXPORTAI_WRITE_DIRECTORY_FILE_PORT";
+  const MSG_NOTION_CONNECT = "EXPORTAI_NOTION_CONNECT";
+  const MSG_NOTION_DISCONNECT = "EXPORTAI_NOTION_DISCONNECT";
+  const MSG_NOTION_STATUS = "EXPORTAI_NOTION_STATUS";
+  const MSG_NOTION_TARGETS = "EXPORTAI_NOTION_TARGETS";
+  const MSG_NOTION_CREATE_PAGE = "EXPORTAI_NOTION_CREATE_PAGE";
+  const NOTION_STORAGE_KEY = "exportai_notion_connection";
+  const NOTION_VERSION = "2026-03-11";
 
   const PORT_PDF_RENDER_TAB = "CHAT_EXPORT_AI_PDF_RENDER_TAB_PORT";
   const MSG_PDF_TAB_LOAD_HTML = "CHAT_EXPORT_AI_PDF_TAB_LOAD_HTML";
   const MSG_PDF_TAB_HTML_READY = "CHAT_EXPORT_AI_PDF_TAB_HTML_READY";
 
   const PDF_RENDER_TAB_PATH = "src/background/pdf-render-tab.html";
-  const API_BASE = "https://exportai.followaigc.com";
+  const API_BASE = "https://exportai.nexscp.com";
   const MEMBERSHIP_STORAGE_KEY = "exportai_membership";
   const FS_DIRECTORY_DB_NAME = "exportai-file-system-access";
   const FS_DIRECTORY_STORE_NAME = "handles";
@@ -154,6 +161,93 @@
     return new Promise((resolve) => {
       chrome.storage.local.set(value, () => resolve(true));
     });
+  }
+
+  function storageRemove(keys) {
+    return new Promise((resolve) => chrome.storage.local.remove(keys, () => resolve(true)));
+  }
+
+  async function notionRequest(path, options = {}) {
+    const stored = await storageGet([NOTION_STORAGE_KEY]);
+    const token = stored[NOTION_STORAGE_KEY]?.accessToken;
+    if (!token) throw new Error("Notion is not connected.");
+    const response = await fetch(`https://api.notion.com/v1${path}`, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Notion-Version": NOTION_VERSION,
+        "Content-Type": "application/json",
+        ...(options.headers || {})
+      }
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.message || `Notion request failed (${response.status}).`);
+    return body;
+  }
+
+  async function connectNotion() {
+    if (!chrome.identity?.launchWebAuthFlow) throw new Error("This browser does not support Notion authorization.");
+    const redirectUri = chrome.identity.getRedirectURL("notion");
+    const state = crypto.randomUUID();
+    const account = await storageGet(["exportai_access_token"]);
+    const accountToken = account.exportai_access_token;
+    if (!accountToken) throw new Error("Sign in to ExportAI before connecting Notion.");
+    const accountHeaders = { Authorization: `Bearer ${accountToken}` };
+    const startResponse = await fetch(`${API_BASE}/api/notion/oauth/start?redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`, { headers: accountHeaders });
+    const startBody = await startResponse.json();
+    if (!startResponse.ok || !startBody?.data?.authorizationUrl) throw new Error(startBody?.message || "Could not start Notion authorization.");
+    const callbackUrl = await new Promise((resolve, reject) => {
+      chrome.identity.launchWebAuthFlow({ url: startBody.data.authorizationUrl, interactive: true }, (url) => {
+        const error = chrome.runtime.lastError;
+        if (error || !url) reject(new Error(error?.message || "Notion authorization was cancelled."));
+        else resolve(url);
+      });
+    });
+    const callback = new URL(callbackUrl);
+    if (callback.searchParams.get("state") !== state) throw new Error("Invalid Notion authorization state.");
+    const code = callback.searchParams.get("code");
+    if (!code) throw new Error(callback.searchParams.get("error") || "Notion did not return an authorization code.");
+    const exchangeResponse = await fetch(`${API_BASE}/api/notion/oauth/exchange`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...accountHeaders },
+      body: JSON.stringify({ code, redirectUri })
+    });
+    const exchangeBody = await exchangeResponse.json();
+    if (!exchangeResponse.ok || !exchangeBody?.data?.accessToken) throw new Error(exchangeBody?.message || "Could not finish Notion authorization.");
+    const connection = exchangeBody.data;
+    await storageSet({ [NOTION_STORAGE_KEY]: connection });
+    return { ok: true, connected: true, workspaceName: connection.workspaceName || "Notion" };
+  }
+
+  async function getNotionTargets() {
+    const body = await notionRequest("/search", { method: "POST", body: JSON.stringify({ page_size: 100, sort: { direction: "descending", timestamp: "last_edited_time" } }) });
+    const targets = (body.results || []).filter((item) => item.object === "page" || item.object === "data_source").map((item) => ({
+      id: item.id,
+      type: item.object === "data_source" ? "data_source" : "page",
+      titleProperty: item.object === "data_source" ? (Object.entries(item.properties || {}).find(([, property]) => property?.type === "title")?.[0] || "Name") : "title",
+      title: item.object === "data_source"
+        ? (item.title || []).map((part) => part.plain_text || "").join("") || "Untitled database"
+        : Object.values(item.properties || {}).flatMap((property) => property?.title || []).map((part) => part.plain_text || "").join("") || "Untitled page",
+      url: item.url || ""
+    }));
+    return { ok: true, targets };
+  }
+
+  async function createNotionPage(payload = {}) {
+    const target = payload.target || {};
+    const parent = target.type === "data_source" ? { type: "data_source_id", data_source_id: target.id } : { type: "page_id", page_id: target.id };
+    const requestId = String(payload.requestId || "");
+    const stored = await storageGet([`exportai_notion_export_${requestId}`]);
+    if (requestId && stored[`exportai_notion_export_${requestId}`]?.url) return { ok: true, duplicate: true, ...stored[`exportai_notion_export_${requestId}`] };
+    const titleProperty = target.type === "data_source" ? String(target.titleProperty || "Name") : "title";
+    const page = await notionRequest("/pages", { method: "POST", body: JSON.stringify({ parent, properties: { [titleProperty]: { type: "title", title: [{ type: "text", text: { content: String(payload.title || "AI conversation").slice(0, 2000) } }] } }, children: (payload.blocks || []).slice(0, 100) }) });
+    const remaining = (payload.blocks || []).slice(100);
+    for (let index = 0; index < remaining.length; index += 100) {
+      await notionRequest(`/blocks/${page.id}/children`, { method: "PATCH", body: JSON.stringify({ children: remaining.slice(index, index + 100) }) });
+    }
+    const result = { pageId: page.id, url: page.url };
+    if (requestId) await storageSet({ [`exportai_notion_export_${requestId}`]: result });
+    return { ok: true, ...result };
   }
 
   function delay(ms) {
@@ -1440,6 +1534,34 @@
         .then((result) => sendResponse(result))
         .catch((error) => sendResponse({ ok: false, error: error.message }));
 
+      return true;
+    }
+
+    if (message.type === MSG_NOTION_CONNECT) {
+      connectNotion().then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
+      return true;
+    }
+
+    if (message.type === MSG_NOTION_DISCONNECT) {
+      storageRemove([NOTION_STORAGE_KEY]).then(() => sendResponse({ ok: true, connected: false }));
+      return true;
+    }
+
+    if (message.type === MSG_NOTION_STATUS) {
+      storageGet([NOTION_STORAGE_KEY]).then((stored) => {
+        const connection = stored[NOTION_STORAGE_KEY];
+        sendResponse({ ok: true, connected: Boolean(connection?.accessToken), workspaceName: connection?.workspaceName || "" });
+      });
+      return true;
+    }
+
+    if (message.type === MSG_NOTION_TARGETS) {
+      getNotionTargets().then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
+      return true;
+    }
+
+    if (message.type === MSG_NOTION_CREATE_PAGE) {
+      createNotionPage(message.payload).then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
       return true;
     }
 

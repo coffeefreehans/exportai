@@ -7,7 +7,7 @@
     EXPORT_FORMATS
   } = root.constants;
 
-  const WEB_URL = "https://exportai.followaigc.com";
+  const WEB_URL = "https://exportai.nexscp.com";
   const FS_DIRECTORY_DB_NAME = "exportai-file-system-access";
   const FS_DIRECTORY_STORE_NAME = "handles";
   const FS_DIRECTORY_HANDLE_KEY = "lastDownloadDirectory";
@@ -380,8 +380,8 @@
     }
   }
 
-  goLoginButton.addEventListener("click", () => openUrl(`${WEB_URL}/login?return=/account`));
-  loginButton.addEventListener("click", () => openUrl(`${WEB_URL}/account`));
+  goLoginButton.addEventListener("click", () => openUrl(`${WEB_URL}/login?return=/account&extension_callback=1`));
+  loginButton.addEventListener("click", () => openUrl(`${WEB_URL}/account?extension_callback=1`));
   openOptionsButton.addEventListener("click", () => {
     if (globalThis.chrome?.runtime?.openOptionsPage) {
       globalThis.chrome.runtime.openOptionsPage();

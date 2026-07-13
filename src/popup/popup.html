@@ -9,9 +9,14 @@
 <body>
   <main class="popup">
     <header class="title-row">
-      <div>
-        <h1>ExportAI</h1>
-        <p id="accountText" class="account-text">ExportAI</p>
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M7 5h9.5L14 2.5 15.5 1 21 6.5 15.5 12 14 10.5 16.5 8H9v8h4v3H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm10 10v2h-1.5l2.5 2.5-1.5 1.5L11 15.5l5.5-5.5 1.5 1.5-2.5 2.5H17Z"/></svg>
+        </div>
+        <div>
+          <h1>ExportAI</h1>
+          <p id="accountText" class="account-text">ExportAI</p>
+        </div>
       </div>
       <div class="header-actions">
         <button id="loginButton" class="icon-button" type="button" aria-label="Account" title="Account" data-i18n-aria-label="accountButton" data-i18n-title="accountButton">
@@ -28,7 +33,10 @@
       <button id="goLoginButton" class="primary-button" type="button" data-i18n="signIn">Sign in</button>
     </section>
 
-    <p id="status" class="status" hidden></p>
+    <div id="status" class="status" role="status" aria-live="polite" hidden>
+      <span id="statusText"></span>
+      <button id="statusAction" class="status-action" type="button" hidden data-i18n="openInNotion">Open in Notion</button>
+    </div>
 
     <section id="summary" class="summary-card" hidden>
       <div class="summary-row"><span data-i18n="platform">Platform</span><strong id="summaryProvider"></strong></div>
@@ -38,7 +46,8 @@
     <section id="exportPanel" class="panel" hidden>
       <div class="section-title" data-i18n="chooseExportFormats">Choose export formats</div>
       <div id="formatOptions" class="format-grid"></div>
-      <button id="exportButton" class="primary-button" type="button" data-i18n="export">Export</button>
+      <button id="exportButton" class="primary-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v10.2l3.6-3.6L18 11l-6 6-6-6 1.4-1.4 3.6 3.6V3Zm-6 16h14v2H5v-2Z"/></svg><span data-i18n="export">Export</span></button>
+      <button id="notionButton" class="primary-button notion-button" type="button"><span class="notion-mini-mark" aria-hidden="true">N</span><span id="notionButtonLabel" data-i18n="sendToNotion">Send to Notion</span></button>
     </section>
   </main>
 

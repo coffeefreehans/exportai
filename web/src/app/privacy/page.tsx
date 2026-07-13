@@ -57,7 +57,7 @@ const COPY = {
       },
       {
         title: '联系方式',
-        items: ['如需隐私相关支持，请联系：support@followaigc.com'],
+        items: ['如需隐私相关支持，请联系：support@nexscp.com'],
       },
     ],
   },
@@ -112,7 +112,7 @@ const COPY = {
       },
       {
         title: 'Contact',
-        items: ['For privacy support, contact: support@followaigc.com'],
+        items: ['For privacy support, contact: support@nexscp.com'],
       },
     ],
   },

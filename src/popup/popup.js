@@ -3,11 +3,12 @@
   const {
     MSG_GET_CHAT_STATUS,
     MSG_EXPORT_CHAT,
+    MSG_EXPORT_NOTION,
     MSG_CHECK_MEMBERSHIP,
     EXPORT_FORMATS
   } = root.constants;
 
-  const WEB_URL = "https://exportai.followaigc.com";
+  const WEB_URL = "https://exportai.nexscp.com";
   const FS_DIRECTORY_DB_NAME = "exportai-file-system-access";
   const FS_DIRECTORY_STORE_NAME = "handles";
   const FS_DIRECTORY_HANDLE_KEY = "lastDownloadDirectory";
@@ -43,6 +44,13 @@
       exporting: "Exporting...",
       exportFailed: "Export failed",
       exportComplete: "Export complete.",
+      sendToNotion: "Send to Notion",
+      configureNotion: "Set up Notion",
+      sendingToNotion: "Sending...",
+      sentToNotion: "Sent to Notion.",
+      alreadySentToNotion: "Already sent to Notion.",
+      openInNotion: "Open in Notion",
+      notionSetupHint: "Connect Notion and choose a destination in Settings.",
       directoryDbOpenError: "Unable to open directory permission storage.",
       directorySaveError: "Unable to save directory permission.",
       directoryPickerUnsupported: "This browser does not support choosing one folder for multiple files. Please use a current Chrome or Edge.",
@@ -69,6 +77,13 @@
       exporting: "\u5bfc\u51fa\u4e2d...",
       exportFailed: "\u5bfc\u51fa\u5931\u8d25",
       exportComplete: "\u5bfc\u51fa\u5b8c\u6210\u3002",
+      sendToNotion: "\u53d1\u9001\u5230 Notion",
+      configureNotion: "\u8bbe\u7f6e Notion",
+      sendingToNotion: "\u6b63\u5728\u53d1\u9001...",
+      sentToNotion: "\u5df2\u53d1\u9001\u5230 Notion\u3002",
+      alreadySentToNotion: "\u8be5\u5bf9\u8bdd\u5df2\u53d1\u9001\u5230 Notion\u3002",
+      openInNotion: "\u5728 Notion \u4e2d\u6253\u5f00",
+      notionSetupHint: "\u8bf7\u5148\u5728\u8bbe\u7f6e\u4e2d\u8fde\u63a5 Notion \u5e76\u9009\u62e9\u9ed8\u8ba4\u4f4d\u7f6e\u3002",
       directoryDbOpenError: "\u65e0\u6cd5\u6253\u5f00\u76ee\u5f55\u6743\u9650\u5b58\u50a8\u3002",
       directorySaveError: "\u65e0\u6cd5\u4fdd\u5b58\u76ee\u5f55\u6743\u9650\u3002",
       directoryPickerUnsupported: "\u5f53\u524d\u6d4f\u89c8\u5668\u4e0d\u652f\u6301\u4e00\u6b21\u9009\u62e9\u76ee\u5f55\u4fdd\u5b58\u591a\u4e2a\u6587\u4ef6\u3002\u8bf7\u4f7f\u7528\u65b0\u7248 Chrome/Edge\u3002",
@@ -83,17 +98,21 @@
   const loginButton = document.getElementById("loginButton");
   const openOptionsButton = document.getElementById("openOptions");
   const statusNode = document.getElementById("status");
+  const statusTextNode = document.getElementById("statusText");
+  const statusActionNode = document.getElementById("statusAction");
   const summaryNode = document.getElementById("summary");
   const summaryProviderNode = document.getElementById("summaryProvider");
   const summaryChatNameNode = document.getElementById("summaryChatName");
   const exportPanel = document.getElementById("exportPanel");
   const formatOptionsNode = document.getElementById("formatOptions");
   const exportButton = document.getElementById("exportButton");
+  const notionButton = document.getElementById("notionButton");
 
   let activeTabId = null;
   let currentSettings = null;
   let currentMembership = { isMember: false };
   let exportInProgress = false;
+  let lastNotionUrl = "";
 
   function normalizeLanguage(value) {
     return String(value || "").toLowerCase() === "zh-cn" ? "zh-CN" : "en";
@@ -128,9 +147,24 @@
     });
   }
 
-  function setStatus(message) {
-    statusNode.textContent = String(message || "");
-    statusNode.hidden = !statusNode.textContent;
+  function setStatus(message, tone = "", actionUrl = "") {
+    const text = String(message || "");
+    statusTextNode.textContent = text;
+    statusNode.hidden = !text;
+    statusNode.classList.toggle("is-success", tone === "success");
+    statusNode.classList.toggle("is-error", tone === "error");
+    lastNotionUrl = String(actionUrl || "");
+    statusActionNode.hidden = !lastNotionUrl;
+  }
+
+  function setButtonLabel(button, label) {
+    const labelNode = button?.querySelector?.("span[data-i18n], #notionButtonLabel");
+    if (labelNode) labelNode.textContent = String(label || "");
+    else if (button) button.textContent = String(label || "");
+  }
+
+  function refreshNotionButtonLabel() {
+    setButtonLabel(notionButton, currentSettings?.notionTarget?.id ? t("sendToNotion") : t("configureNotion"));
   }
 
   function openUrl(url) {
@@ -295,7 +329,7 @@
     summaryNode.hidden = false;
     exportPanel.hidden = false;
     exportButton.disabled = true;
-    exportButton.textContent = t("checking");
+    setButtonLabel(exportButton, t("checking"));
     refreshSettingsInBackground();
 
     const tab = await queryActiveTab();
@@ -303,7 +337,7 @@
       setStatus(t("noActiveTab"));
       activeTabId = null;
       exportButton.disabled = true;
-      exportButton.textContent = t("export");
+      setButtonLabel(exportButton, t("export"));
       return;
     }
 
@@ -315,7 +349,7 @@
       summaryProviderNode.textContent = "-";
       summaryChatNameNode.textContent = "-";
       exportButton.disabled = true;
-      exportButton.textContent = t("export");
+      setButtonLabel(exportButton, t("export"));
       return;
     }
 
@@ -324,7 +358,10 @@
     summaryNode.hidden = false;
     exportPanel.hidden = false;
     exportButton.disabled = false;
-    exportButton.textContent = t("export");
+    notionButton.disabled = !currentMembership?.isMember;
+    notionButton.title = !currentMembership?.isMember ? t("paidFormatUnavailable") : (!currentSettings?.notionTarget?.id ? t("notionSetupHint") : "");
+    refreshNotionButtonLabel();
+    setButtonLabel(exportButton, t("export"));
     setStatus("");
   }
 
@@ -352,11 +389,11 @@
 
     try {
       if (useDirectoryPicker) {
-        exportButton.textContent = t("chooseDirectory");
+        setButtonLabel(exportButton, t("chooseDirectory"));
         await chooseDirectoryForAskMode();
       }
 
-      exportButton.textContent = t("exporting");
+      setButtonLabel(exportButton, t("exporting"));
       await saveSelectedFormats();
       const response = await root.chromeHelpers.tabsSendMessage(activeTabId, {
         type: MSG_EXPORT_CHAT,
@@ -370,13 +407,13 @@
       if (!response?.ok) {
         throw new Error(response?.error || t("exportFailed"));
       }
-      setStatus(t("exportComplete"));
+      setStatus(t("exportComplete"), "success");
     } catch (error) {
-      setStatus(`${t("popupError")}: ${error.message}`);
+      setStatus(`${t("popupError")}: ${error.message}`, "error");
     } finally {
       exportInProgress = false;
       exportButton.disabled = false;
-      exportButton.textContent = t("export");
+      setButtonLabel(exportButton, t("export"));
     }
   }
 
@@ -409,6 +446,24 @@
     saveSelectedFormats();
   });
   exportButton.addEventListener("click", runExport);
+  notionButton.addEventListener("click", async () => {
+    if (exportInProgress || activeTabId === null || notionButton.disabled) return;
+    if (!currentSettings?.notionTarget?.id) {
+      if (globalThis.chrome?.runtime?.openOptionsPage) globalThis.chrome.runtime.openOptionsPage();
+      setStatus(t("notionSetupHint"));
+      return;
+    }
+    exportInProgress = true;
+    notionButton.disabled = true;
+    setButtonLabel(notionButton, t("sendingToNotion"));
+    try {
+      const response = await root.chromeHelpers.tabsSendMessage(activeTabId, { type: MSG_EXPORT_NOTION });
+      if (!response?.ok) throw new Error(response?.error || "Notion export failed");
+      setStatus(response.result?.duplicate ? t("alreadySentToNotion") : t("sentToNotion"), "success", response.result?.url || "");
+    } catch (error) { setStatus(`${t("popupError")}: ${error.message}`, "error"); }
+    finally { exportInProgress = false; notionButton.disabled = false; refreshNotionButtonLabel(); }
+  });
+  statusActionNode.addEventListener("click", () => { if (lastNotionUrl) openUrl(lastNotionUrl); });
 
   loadPopup().catch((error) => {
     setStatus(`${t("popupError")}: ${error.message}`);

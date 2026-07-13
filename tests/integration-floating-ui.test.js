@@ -108,7 +108,7 @@ async function getStorage(extensionPage) {
     await chatPage.locator("#ceai-floating-export .ceai-floating-panel").waitFor({ state: "visible", timeout: 2000 });
     assert.deepStrictEqual(
       await chatPage.locator("#ceai-floating-export input:checked").evaluateAll((nodes) => nodes.map((node) => node.value)),
-      ["html", "txt"]
+      ["txt", "html"]
     );
 
     await chatPage.locator('#ceai-floating-export input[value="txt"]').click({ force: true });

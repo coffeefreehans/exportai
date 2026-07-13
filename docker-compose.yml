@@ -34,8 +34,8 @@ services:
       - PGPORT=5432
       - PORT=4000
       - NODE_ENV=production
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://exportai.followaigc.com,http://103.153.37.198:3002,http://103.153.37.198:4000}
-      - WEB_URL=${WEB_URL:-https://exportai.followaigc.com}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://exportai.nexscp.com,http://103.153.37.198:3002,http://103.153.37.198:4000}
+      - WEB_URL=${WEB_URL:-https://exportai.nexscp.com}
     depends_on:
       postgres:
         condition: service_healthy

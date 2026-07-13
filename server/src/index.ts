@@ -15,6 +15,7 @@ import authRoutes from './routes/auth';
 import membershipRouter from './routes/membership';
 import stripeRouter from './routes/stripe';
 import settingsRouter from './routes/settings';
+import notionRouter from './routes/notion';
 
 const app = express();
 
@@ -66,6 +67,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/membership', membershipRouter);
 app.use('/api/stripe', stripeRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/notion', notionRouter);
 
 // ── Error Handlers ──────────────────────────────────────────────
 app.use(notFoundHandler);

@@ -120,6 +120,7 @@
 
       // Visible export format buttons across popup and inline export menu.
       exportButtonOrder: [...DEFAULT_EXPORT_BUTTON_ORDER],
+      notionTarget: null,
       showExportMulti: true,
       showExportPdf: true,
       showExportMht: true,

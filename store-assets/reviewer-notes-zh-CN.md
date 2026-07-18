@@ -2,8 +2,8 @@
 
 ## 审核账号
 
-- 邮箱：`chrome-reviewer@exportai.nexscp.com`
-- 密码：`ExportAI-Review-2026!`
+- 邮箱：`test@exportai.com`
+- 密码：`Test1234!`
 - 套餐：年会员（ACTIVE）
 
 ## 登录步骤

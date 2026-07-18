@@ -2,8 +2,8 @@
 
 ## Reviewer account
 
-- Email: `chrome-reviewer@exportai.nexscp.com`
-- Password: `ExportAI-Review-2026!`
+- Email: `test@exportai.com`
+- Password: `Test1234!`
 - Plan: Annual membership (ACTIVE)
 
 ## Sign-in steps

@@ -15,6 +15,7 @@ assert(background.includes('chrome.identity.launchWebAuthFlow'), 'Background mus
 assert(background.includes('NOTION_VERSION = "2026-03-11"'), 'Notion calls must use the current API version.');
 assert(background.includes('remaining.slice(index, index + 100)'), 'Long chats must be appended in blocks of at most 100.');
 assert(background.includes('exportai_notion_export_'), 'Exports must keep an idempotency record.');
+assert(background.includes('/api/notion/quota/reserve'), 'Notion exports must reserve the server-side daily quota before writing.');
 assert(content.includes('conversationToNotionBlocks'), 'Content script must build structured Notion blocks.');
 assert(content.includes('MSG_EXPORT_NOTION'), 'Content script must expose the Notion export action.');
 assert(options.includes('MSG_NOTION_TARGETS'), 'Settings must load selectable Notion destinations.');

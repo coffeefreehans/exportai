@@ -23,6 +23,14 @@ async function run() {
     oauthStartCount += 1;
     return route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ code: 500, data: null, message: "OAuth should not restart." }) });
   });
+  await context.route("https://api.notion.com/v1/search", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ results: [
+      { object: "page", id: "life-page", url: "https://notion.so/life", properties: { title: { title: [{ plain_text: "生活" }] } } },
+      { object: "page", id: "work-page", url: "https://notion.so/work", properties: { title: { title: [{ plain_text: "工作" }] } } }
+    ] })
+  }));
 
   try {
     let [worker] = context.serviceWorkers();
@@ -35,17 +43,15 @@ async function run() {
 
     const page = await context.newPage();
     await page.goto(`chrome-extension://${extensionId}/src/notion-connect/notion-connect.html`);
-    await page.locator("#successPanel").waitFor({ state: "visible", timeout: 3000 });
+    await page.locator("#targetsPanel").waitFor({ state: "visible", timeout: 3000 });
+    await page.waitForFunction(() => document.querySelector("#workspaceText")?.textContent?.includes("Jacky workspace"));
 
     assert.strictEqual(oauthStartCount, 0, "An existing Notion connection must not restart OAuth.");
     assert.match(String(await page.locator("#workspaceText").textContent()), /Jacky workspace/);
-    assert.strictEqual(await page.locator("#chooseTargetButton").isVisible(), true, "Connected users must be able to continue to destination selection.");
-    const optionsPagePromise = context.waitForEvent("page", { timeout: 3000 });
-    await page.locator("#chooseTargetButton").click();
-    const optionsPage = await optionsPagePromise;
-    await optionsPage.waitForLoadState("domcontentloaded");
-    assert.strictEqual(optionsPage.url(), `chrome-extension://${extensionId}/src/options/options.html?tab=integration`);
-    assert.strictEqual(await optionsPage.locator("#panel-integration").isVisible(), true);
+    assert.deepStrictEqual(await page.locator(".target-title").allTextContents(), ["生活", "工作"]);
+    await page.locator('.target-button[data-target-id="work-page"]').click();
+    const stored = await worker.evaluate(() => new Promise((resolve) => chrome.storage.local.get(["chatExportAi.settings.v1"], resolve)));
+    assert.strictEqual(stored["chatExportAi.settings.v1"].notionTarget.id, "work-page");
   } finally {
     await context.close();
     fs.rmSync(userDataDir, { recursive: true, force: true });

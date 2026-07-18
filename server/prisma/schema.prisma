@@ -51,6 +51,8 @@ model User {
   passwordResets PasswordReset[]
   membership     Membership?
   settings       UserSettings?
+  notionDailyUsage NotionDailyUsage[]
+  notionExportRequests NotionExportRequest[]
 
   @@map("users")
 }
@@ -93,4 +95,32 @@ model PasswordReset {
 
   @@index([token])
   @@map("password_resets")
+}
+
+model NotionDailyUsage {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  usageDate  DateTime @map("usage_date") @db.Date
+  usageCount Int      @default(0) @map("usage_count")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamp
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, usageDate])
+  @@map("notion_daily_usage")
+}
+
+model NotionExportRequest {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  requestId String   @map("request_id") @db.VarChar(255)
+  usageDate DateTime @map("usage_date") @db.Date
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, requestId])
+  @@index([userId, usageDate])
+  @@map("notion_export_requests")
 }

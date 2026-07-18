@@ -47,6 +47,11 @@ assert(
 );
 
 assert(
+  /addEventListener\("focus",\s*refreshMembershipOnFocus\)/.test(options),
+  "options page must force-refresh membership when it regains focus after checkout."
+);
+
+assert(
   /getMembership\(true\)/.test(popup),
   "popup must force-refresh membership in the background instead of trusting stale cache."
 );

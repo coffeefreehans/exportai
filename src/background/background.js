@@ -22,6 +22,7 @@
   const MSG_NOTION_DISCONNECT = "EXPORTAI_NOTION_DISCONNECT";
   const MSG_NOTION_STATUS = "EXPORTAI_NOTION_STATUS";
   const MSG_NOTION_TARGETS = "EXPORTAI_NOTION_TARGETS";
+  const MSG_NOTION_QUOTA_STATUS = "EXPORTAI_NOTION_QUOTA_STATUS";
   const MSG_NOTION_CREATE_PAGE = "EXPORTAI_NOTION_CREATE_PAGE";
   const MSG_ACCOUNT_LOGIN = "EXPORTAI_ACCOUNT_LOGIN";
   const MSG_ACCOUNT_GOOGLE_LOGIN = "EXPORTAI_ACCOUNT_GOOGLE_LOGIN";
@@ -265,17 +266,36 @@
   }
 
   async function getNotionTargets() {
-    const body = await notionRequest("/search", { method: "POST", body: JSON.stringify({ page_size: 100, sort: { direction: "descending", timestamp: "last_edited_time" } }) });
-    const targets = (body.results || []).filter((item) => item.object === "page" || item.object === "data_source").map((item) => ({
+    const results = [];
+    let startCursor = "";
+    do {
+      const searchBody = {
+        page_size: 100,
+        sort: { direction: "descending", timestamp: "last_edited_time" },
+        ...(startCursor ? { start_cursor: startCursor } : {})
+      };
+      const body = await notionRequest("/search", { method: "POST", body: JSON.stringify(searchBody) });
+      results.push(...(body.results || []));
+      startCursor = body.has_more && body.next_cursor ? String(body.next_cursor) : "";
+    } while (startCursor && results.length < 1000);
+
+    const targets = results.filter((item) => item.object === "page" || item.object === "data_source").map((item) => ({
       id: item.id,
       type: item.object === "data_source" ? "data_source" : "page",
       titleProperty: item.object === "data_source" ? (Object.entries(item.properties || {}).find(([, property]) => property?.type === "title")?.[0] || "Name") : "title",
       title: item.object === "data_source"
         ? (item.title || []).map((part) => part.plain_text || "").join("") || "Untitled database"
         : Object.values(item.properties || {}).flatMap((property) => property?.title || []).map((part) => part.plain_text || "").join("") || "Untitled page",
-      url: item.url || ""
+      url: item.url || "",
+      parentId: item.parent?.page_id || item.parent?.data_source_id || item.parent?.database_id || null,
+      parentType: item.parent?.type || "workspace"
     }));
     return { ok: true, targets };
+  }
+
+  async function getNotionQuotaStatus() {
+    const body = await apiRequest("/api/notion/quota", { method: "GET" });
+    return { ok: true, ...(body?.data || {}) };
   }
 
   async function createNotionPage(payload = {}) {
@@ -284,15 +304,31 @@
     const requestId = String(payload.requestId || "");
     const stored = await storageGet([`exportai_notion_export_${requestId}`]);
     if (requestId && stored[`exportai_notion_export_${requestId}`]?.url) return { ok: true, duplicate: true, ...stored[`exportai_notion_export_${requestId}`] };
+    const quotaRequestId = requestId || crypto.randomUUID();
+    const quotaBody = await apiRequest("/api/notion/quota/reserve", {
+      method: "POST",
+      body: JSON.stringify({ requestId: quotaRequestId })
+    });
+    const quota = quotaBody?.data || {};
     const titleProperty = target.type === "data_source" ? String(target.titleProperty || "Name") : "title";
-    const page = await notionRequest("/pages", { method: "POST", body: JSON.stringify({ parent, properties: { [titleProperty]: { type: "title", title: [{ type: "text", text: { content: String(payload.title || "AI conversation").slice(0, 2000) } }] } }, children: (payload.blocks || []).slice(0, 100) }) });
-    const remaining = (payload.blocks || []).slice(100);
-    for (let index = 0; index < remaining.length; index += 100) {
-      await notionRequest(`/blocks/${page.id}/children`, { method: "PATCH", body: JSON.stringify({ children: remaining.slice(index, index + 100) }) });
+    try {
+      const page = await notionRequest("/pages", { method: "POST", body: JSON.stringify({ parent, properties: { [titleProperty]: { type: "title", title: [{ type: "text", text: { content: String(payload.title || "AI conversation").slice(0, 2000) } }] } }, children: (payload.blocks || []).slice(0, 100) }) });
+      const remaining = (payload.blocks || []).slice(100);
+      for (let index = 0; index < remaining.length; index += 100) {
+        await notionRequest(`/blocks/${page.id}/children`, { method: "PATCH", body: JSON.stringify({ children: remaining.slice(index, index + 100) }) });
+      }
+      const result = { pageId: page.id, url: page.url };
+      if (requestId) await storageSet({ [`exportai_notion_export_${requestId}`]: result });
+      return { ok: true, quota, ...result };
+    } catch (error) {
+      if (quota.counted && !quota.duplicate) {
+        await apiRequest("/api/notion/quota/release", {
+          method: "POST",
+          body: JSON.stringify({ requestId: quotaRequestId })
+        }).catch(() => null);
+      }
+      throw error;
     }
-    const result = { pageId: page.id, url: page.url };
-    if (requestId) await storageSet({ [`exportai_notion_export_${requestId}`]: result });
-    return { ok: true, ...result };
   }
 
   function delay(ms) {
@@ -1588,12 +1624,22 @@
     }
 
     if (message.type === MSG_ACCOUNT_LOGIN) {
-      loginExportAi(message.payload).then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
+      (async () => {
+        const loginResult = await loginExportAi(message.payload);
+        if (!message.payload?.connectNotion) return loginResult;
+        const notionResult = await connectNotion();
+        return { ...notionResult, user: loginResult.user };
+      })().then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
       return true;
     }
 
     if (message.type === MSG_ACCOUNT_GOOGLE_LOGIN) {
-      loginExportAiWithGoogle().then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
+      (async () => {
+        const loginResult = await loginExportAiWithGoogle();
+        if (!message.payload?.connectNotion) return loginResult;
+        const notionResult = await connectNotion();
+        return { ...notionResult, user: loginResult.user };
+      })().then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
       return true;
     }
 
@@ -1612,6 +1658,11 @@
 
     if (message.type === MSG_NOTION_TARGETS) {
       getNotionTargets().then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
+      return true;
+    }
+
+    if (message.type === MSG_NOTION_QUOTA_STATUS) {
+      getNotionQuotaStatus().then(sendResponse).catch((error) => sendResponse({ ok: false, error: error.message }));
       return true;
     }
 

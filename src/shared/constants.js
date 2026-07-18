@@ -15,6 +15,10 @@
     // Hard cap for export timeout while the PDF pipeline is still conservative.
     MAX_EXPORT_TIMEOUT_SECONDS: 20,
 
+    // Temporary product switch: grants access to paid extension features
+    // without changing the user's real membership or billing records.
+    PAID_FEATURES_TEMPORARILY_UNLOCKED: true,
+
     // Contrato de mensajes entre content/popup/background.
     MSG_DOWNLOAD_FILE: "CHAT_EXPORT_AI_DOWNLOAD_FILE",
     MSG_RENDER_HTML_TO_PDF: "CHAT_EXPORT_AI_RENDER_HTML_TO_PDF",
@@ -27,6 +31,7 @@
     MSG_NOTION_DISCONNECT: "EXPORTAI_NOTION_DISCONNECT",
     MSG_NOTION_STATUS: "EXPORTAI_NOTION_STATUS",
     MSG_NOTION_TARGETS: "EXPORTAI_NOTION_TARGETS",
+    MSG_NOTION_QUOTA_STATUS: "EXPORTAI_NOTION_QUOTA_STATUS",
     MSG_NOTION_CREATE_PAGE: "EXPORTAI_NOTION_CREATE_PAGE",
     MSG_ACCOUNT_LOGIN: "EXPORTAI_ACCOUNT_LOGIN",
     MSG_AUTO_EXPORT_CHAT: "CHAT_EXPORT_AI_AUTO_EXPORT_CHAT",

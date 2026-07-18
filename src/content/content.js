@@ -20,6 +20,7 @@
     TEXT_FORMATTING,
     QUOTE_DIVIDER_STYLE,
     MSG_CHECK_MEMBERSHIP,
+    PAID_FEATURES_TEMPORARILY_UNLOCKED,
     MSG_DEBUG_MEDIA_EXTRACTION,
     MSG_WRITE_FILES_TO_DIRECTORY,
     MSG_WRITE_FILE_TO_DIRECTORY_CHUNK,
@@ -1373,7 +1374,7 @@
 
   async function isMember() {
     const response = await root.chromeHelpers.runtimeSendMessage({ type: MSG_CHECK_MEMBERSHIP });
-    return Boolean(response?.ok && response.isMember);
+    return Boolean(PAID_FEATURES_TEMPORARILY_UNLOCKED || (response?.ok && response.isMember));
   }
 
   async function getIntegrationMembership() {
@@ -1383,9 +1384,14 @@
       : { ok: false, isMember: false, error: response?.error || "membership_unavailable" };
   }
 
+  function hasPaidFeatureAccess(membership) {
+    return Boolean(PAID_FEATURES_TEMPORARILY_UNLOCKED || membership?.isMember);
+  }
+
   async function assertAllowedFormatsForMembership(formats) {
     const membership = await getIntegrationMembership();
-    if (membership.isMember) {
+    const paidFeatureAccess = hasPaidFeatureAccess(membership);
+    if (paidFeatureAccess) {
       return;
     }
 
@@ -1403,6 +1409,7 @@
       providerId: null,
       isChatPage: false,
       isMember: false,
+      paidFeatureAccess: Boolean(PAID_FEATURES_TEMPORARILY_UNLOCKED),
       enabledBySettings: false,
       autoExportEnabled: false,
       autoExportMode: "change",
@@ -1419,6 +1426,7 @@
     const provider = getActiveProvider();
     const settings = cachedInlineUiSettings || await root.storage.getSettings();
     const membership = await getIntegrationMembership();
+    const paidFeatureAccess = hasPaidFeatureAccess(membership);
     const isChatPage = Boolean(provider?.isChatPage?.());
     const enabledBySettings = Boolean(provider && getProviderButtonSetting(settings, provider.id));
     let reason = "visible";
@@ -1433,7 +1441,7 @@
     } else if (!enabledBySettings) {
       reason = "disabled_by_settings";
       visible = false;
-    } else if (!membership.isMember) {
+    } else if (!paidFeatureAccess) {
       reason = "not_member";
       visible = false;
     }
@@ -1445,8 +1453,9 @@
       providerName: provider?.displayName || null,
       isChatPage,
       isMember: Boolean(membership.isMember),
+      paidFeatureAccess,
       enabledBySettings,
-      autoExportEnabled: Boolean(settings.autoExportEnabled && membership.isMember),
+      autoExportEnabled: Boolean(settings.autoExportEnabled && paidFeatureAccess),
       autoExportMode: String(settings.autoExportMode || "change").toLowerCase(),
       autoExportFormats: normalizeSelectedExportFormats(settings.autoExportSelectedFormats, [EXPORT_FORMATS.HTML]),
       autoExportRuntime: autoExportRuntimeKey || "off",
@@ -1639,10 +1648,11 @@
     }
 
     const membership = await getIntegrationMembership();
+    const paidFeatureAccess = hasPaidFeatureAccess(membership);
     const isChatPage = Boolean(provider?.isChatPage?.());
     const enabledBySettings = Boolean(provider && getProviderButtonSetting(settings, provider.id));
 
-    if (!provider || !isChatPage || !enabledBySettings || !membership.isMember) {
+    if (!provider || !isChatPage || !enabledBySettings || !paidFeatureAccess) {
       let reason = "visible";
       if (!provider) {
         reason = "no_provider";
@@ -1650,7 +1660,7 @@
         reason = "not_chat_page";
       } else if (!enabledBySettings) {
         reason = "disabled_by_settings";
-      } else if (!membership.isMember) {
+      } else if (!paidFeatureAccess) {
         reason = "not_member";
       }
       setIntegrationStatus({
@@ -1660,8 +1670,9 @@
         providerName: provider?.displayName || null,
         isChatPage,
         isMember: Boolean(membership.isMember),
+        paidFeatureAccess,
         enabledBySettings,
-        autoExportEnabled: Boolean(settings.autoExportEnabled && membership.isMember),
+        autoExportEnabled: Boolean(settings.autoExportEnabled && paidFeatureAccess),
         autoExportMode: String(settings.autoExportMode || "change").toLowerCase(),
         autoExportFormats: normalizeSelectedExportFormats(settings.autoExportSelectedFormats, [EXPORT_FORMATS.HTML]),
         autoExportRuntime: autoExportRuntimeKey || "off",
@@ -1689,8 +1700,9 @@
         providerName: provider.displayName,
         isChatPage,
         isMember: Boolean(membership.isMember),
+        paidFeatureAccess,
         enabledBySettings,
-        autoExportEnabled: Boolean(settings.autoExportEnabled && membership.isMember),
+        autoExportEnabled: Boolean(settings.autoExportEnabled && paidFeatureAccess),
         autoExportMode: String(settings.autoExportMode || "change").toLowerCase(),
         autoExportFormats: normalizeSelectedExportFormats(settings.autoExportSelectedFormats, [EXPORT_FORMATS.HTML]),
         autoExportRuntime: autoExportRuntimeKey || "off",
@@ -1763,8 +1775,9 @@
         providerName: provider.displayName,
         isChatPage,
         isMember: Boolean(membership.isMember),
+        paidFeatureAccess,
         enabledBySettings,
-        autoExportEnabled: Boolean(settings.autoExportEnabled && membership.isMember),
+        autoExportEnabled: Boolean(settings.autoExportEnabled && paidFeatureAccess),
         autoExportMode: String(settings.autoExportMode || "change").toLowerCase(),
         autoExportFormats: normalizeSelectedExportFormats(settings.autoExportSelectedFormats, [EXPORT_FORMATS.HTML]),
         autoExportRuntime: autoExportRuntimeKey || "off",
@@ -1785,8 +1798,9 @@
       providerName: provider.displayName,
       isChatPage,
       isMember: Boolean(membership.isMember),
+      paidFeatureAccess,
       enabledBySettings,
-      autoExportEnabled: Boolean(settings.autoExportEnabled && membership.isMember),
+      autoExportEnabled: Boolean(settings.autoExportEnabled && paidFeatureAccess),
       autoExportMode: String(settings.autoExportMode || "change").toLowerCase(),
       autoExportFormats: normalizeSelectedExportFormats(settings.autoExportSelectedFormats, [EXPORT_FORMATS.HTML]),
       autoExportRuntime: autoExportRuntimeKey || "off",

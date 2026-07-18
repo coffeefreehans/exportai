@@ -8,7 +8,9 @@ const popupJs = fs.readFileSync(path.join(root, 'src/popup/popup.js'), 'utf8');
 const optionsHtml = fs.readFileSync(path.join(root, 'src/options/options.html'), 'utf8');
 
 const requiredPopupIds = [
-  'accountText', 'loginButton', 'openOptions', 'loginPanel', 'goLoginButton',
+  'accountText', 'loginButton', 'openOptions', 'loginPanel', 'popupLoginForm',
+  'popupLoginEmail', 'popupLoginPassword', 'popupLoginSubmit', 'popupGoogleLogin',
+  'popupForgotPassword', 'popupRegisterLink',
   'status', 'statusText', 'statusAction', 'summary', 'summaryProvider',
   'summaryChatName', 'exportPanel', 'formatOptions', 'exportButton', 'notionButton'
 ];
@@ -23,7 +25,7 @@ const requiredOptionsIds = [
   'textFormatting', 'multilineFormat', 'metadataEnabled', 'includeExportTitle',
   'metadataExportedAt', 'metadataModel', 'metadataUrl', 'metadataSummaryChatName',
   'metadataSummaryMessages', 'panel-files', 'customDownloadFolder',
-  'autosaveConflictAction', 'panel-integration', 'paidBadge', 'notionStatus',
+  'autosaveConflictAction', 'panel-integration', 'notionStatus',
   'notionStatusText', 'notionConnect', 'notionDisconnect', 'notionTarget',
   'showHeaderExportButton', 'integrationFormats', 'autoExportSettings',
   'autoExportEnabled', 'autoExportMode', 'autoExportIntervalSeconds', 'autoExportFormats'

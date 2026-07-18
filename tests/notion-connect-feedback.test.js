@@ -44,16 +44,17 @@ async function run() {
     page.on("pageerror", (error) => pageErrors.push(error.message));
     await page.goto(`chrome-extension://${extensionId}/src/options/options.html`);
     await page.locator("#tab-integration").click();
-    const connectWindowPromise = context.waitForEvent("page", { timeout: 3000 });
     await page.locator("#notionConnect").click();
-    const connectWindow = await connectWindowPromise;
-    await connectWindow.locator("#loginPanel").waitFor({ state: "visible", timeout: 5000 });
+    const popup = await context.newPage();
+    await popup.goto(`chrome-extension://${extensionId}/src/popup/popup.html`);
+    await popup.locator("#notionFlow").waitFor({ state: "visible", timeout: 5000 });
+    await popup.locator("#notionLoginView").waitFor({ state: "visible", timeout: 5000 });
 
-    const localStatus = await connectWindow.locator("#statusText").textContent();
+    const localStatus = `${await popup.locator("#notionFlowStatus").textContent()} ${await popup.locator("#notionLoginView").textContent()}`;
     assert.match(
       String(localStatus),
       /expired|sign in|log in|登录|登陆|过期/i,
-      "A failed Notion connection must show an actionable message inside the dedicated connection window."
+      "An expired account must show an actionable message in the original popup."
     );
     assert.deepStrictEqual(pageErrors, [], "The settings page must not throw while handling an expired login.");
   } finally {

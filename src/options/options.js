@@ -1,6 +1,6 @@
 (() => {
   const root = globalThis.ChatExportAi;
-  const { EXPORT_FORMATS, MSG_CHECK_MEMBERSHIP, MSG_NOTION_DISCONNECT, MSG_NOTION_STATUS, MSG_NOTION_TARGETS } = root.constants;
+  const { EXPORT_FORMATS, MSG_CHECK_MEMBERSHIP, MSG_NOTION_DISCONNECT, MSG_NOTION_STATUS, MSG_NOTION_TARGETS, PAID_FEATURES_TEMPORARILY_UNLOCKED } = root.constants;
   const WEB_URL = "https://exportai.nexscp.com";
   const AUTO_EXPORT_FEATURE_ENABLED = false;
   const FORMAT_OPTIONS = [
@@ -25,6 +25,11 @@
   const notionConnectButton = document.getElementById("notionConnect");
   const notionDisconnectButton = document.getElementById("notionDisconnect");
   const notionTargetNode = document.getElementById("notionTarget");
+  const notionTargetBrowser = document.getElementById("notionTargetBrowser");
+  const notionTargetBack = document.getElementById("notionTargetBack");
+  const notionTargetPathNode = document.getElementById("notionTargetPath");
+  const notionTargetListNode = document.getElementById("notionTargetList");
+  const notionTargetEmptyNode = document.getElementById("notionTargetEmpty");
   const notionStatusNode = document.getElementById("notionStatus");
   const notionStatusTextNode = document.getElementById("notionStatusText");
   const tabButtons = Array.from(document.querySelectorAll("[data-tab]"));
@@ -45,9 +50,12 @@
       notionDefaultDestination: "Default destination",
       notionConnectFirst: "Connect Notion first",
       notionChooseDestination: "Choose a page or database",
+      notionAllPages: "All pages",
+      notionBackLevel: "Back one level",
+      notionNoPages: "No pages at this level",
       notionPrivacy: "Chat content is sent directly from your browser to Notion. ExportAI does not store message content.",
       title: "ExportAI Settings",
-      accountButton: "Account",
+      subscriptionButton: "Subscription",
       logoutButton: "Logout",
       tabGeneral: "General",
       tabExport: "Export",
@@ -96,8 +104,6 @@
       overwrite: "Overwrite",
       keepBoth: "Keep both",
       integrationTitle: "Integration",
-      paid: "Paid",
-      paidActive: "Paid active",
       inPageExportButton: "In-page export button",
       enableFloatingExport: "Enable draggable floating export",
       exportRuntime: "Export runtime",
@@ -127,9 +133,12 @@
       notionDefaultDestination: "\u9ed8\u8ba4\u4fdd\u5b58\u4f4d\u7f6e",
       notionConnectFirst: "\u8bf7\u5148\u8fde\u63a5 Notion",
       notionChooseDestination: "\u9009\u62e9\u9875\u9762\u6216\u6570\u636e\u5e93",
+      notionAllPages: "\u5168\u90e8\u9875\u9762",
+      notionBackLevel: "\u8fd4\u56de\u4e0a\u4e00\u7ea7",
+      notionNoPages: "\u5f53\u524d\u5c42\u7ea7\u6ca1\u6709\u9875\u9762",
       notionPrivacy: "\u5bf9\u8bdd\u5185\u5bb9\u7531\u6d4f\u89c8\u5668\u76f4\u63a5\u53d1\u9001\u5230 Notion\uff0cExportAI \u4e0d\u5b58\u50a8\u6b63\u6587\u3002",
       title: "ExportAI 设置",
-      accountButton: "账号",
+      subscriptionButton: "订阅",
       logoutButton: "退出",
       tabGeneral: "通用",
       tabExport: "导出",
@@ -178,8 +187,6 @@
       overwrite: "覆盖",
       keepBoth: "保留两个",
       integrationTitle: "集成",
-      paid: "付费",
-      paidActive: "付费已激活",
       inPageExportButton: "页面内导出按钮",
       enableFloatingExport: "启用可拖动浮动导出",
       exportRuntime: "导出运行时",
@@ -208,6 +215,10 @@
   let settingsReady = false;
   let applyingSettings = false;
   let hasLocalEditsSinceRefresh = false;
+  let membershipFocusRefreshInProgress = false;
+  let notionTargets = [];
+  let notionTargetParentId = null;
+  let notionTargetPath = [];
 
   function openUrl(url) {
     if (globalThis.chrome?.tabs?.create) {
@@ -217,13 +228,17 @@
     location.href = url;
   }
 
-  function openNotionConnectWindow() {
-    const url = globalThis.chrome.runtime.getURL("src/notion-connect/notion-connect.html");
-    if (globalThis.chrome?.windows?.create) {
-      globalThis.chrome.windows.create({ url, type: "popup", width: 420, height: 640, focused: true });
-      return;
+  async function openNotionConnectWindow() {
+    await root.chromeHelpers.storageSet({ exportai_notion_inline_flow: true });
+    if (globalThis.chrome?.action?.openPopup) {
+      try {
+        await globalThis.chrome.action.openPopup();
+        return;
+      } catch (_error) {
+        // Fall through to the same popup page when openPopup is unavailable.
+      }
     }
-    openUrl(url);
+    openUrl(globalThis.chrome.runtime.getURL("src/popup/popup.html"));
   }
 
   function setStatus(message) {
@@ -306,9 +321,29 @@
     accountEmailNode.textContent = email;
     accountPlanNode.textContent = plan;
     if (logoutButton) logoutButton.hidden = !auth?.token;
-    const paidBadge = document.getElementById("paidBadge");
-    if (paidBadge) {
-      paidBadge.textContent = currentMembership?.isMember ? t("paidActive") : t("paid");
+  }
+
+  function applyMembershipAccessState() {
+    const shouldLockPaid = membership.isFresh === true && !PAID_FEATURES_TEMPORARILY_UNLOCKED && !membership.isMember;
+    document.querySelectorAll(".paid-card input, .paid-card select").forEach((node) => {
+      node.disabled = shouldLockPaid;
+    });
+    document.querySelector(".paid-card")?.classList.toggle("is-locked", shouldLockPaid);
+    document.querySelector(".paid-card")?.classList.toggle("is-active-member", Boolean(PAID_FEATURES_TEMPORARILY_UNLOCKED || membership.isMember));
+  }
+
+  async function refreshMembershipOnFocus() {
+    if (!settingsReady || membershipFocusRefreshInProgress || document.visibilityState === "hidden") return;
+    const auth = await getAuthState();
+    if (!auth.token) return;
+    membershipFocusRefreshInProgress = true;
+    try {
+      membership = await getMembership(true);
+      updateAccountHeader(auth, membership);
+      applyMembershipAccessState();
+      await refreshNotion().catch(() => null);
+    } finally {
+      membershipFocusRefreshInProgress = false;
     }
   }
 
@@ -349,6 +384,70 @@
     if (node) node.value = value ?? "";
   }
 
+  function normalizeNotionTargets(targets) {
+    const values = Array.isArray(targets) ? targets : [];
+    const ids = new Set(values.map((target) => String(target?.id || "")).filter(Boolean));
+    return values.map((target) => ({
+      ...target,
+      id: String(target.id || ""),
+      parentId: ids.has(String(target.parentId || "")) ? String(target.parentId) : null
+    })).filter((target) => target.id);
+  }
+
+  function renderNotionTargetLevel(parentId = null, path = []) {
+    notionTargetParentId = parentId;
+    notionTargetPath = path;
+    const selectedId = currentSettings?.notionTarget?.id || "";
+    const targets = notionTargets.filter((target) => target.parentId === parentId);
+    notionTargetListNode.replaceChildren();
+    notionTargetBack.hidden = !path.length;
+    notionTargetBack.title = t("notionBackLevel");
+    notionTargetBack.setAttribute("aria-label", t("notionBackLevel"));
+    notionTargetPathNode.textContent = path.length ? path.map((item) => item.title).join(" / ") : t("notionAllPages");
+    notionTargetEmptyNode.textContent = t("notionNoPages");
+    notionTargetEmptyNode.hidden = Boolean(targets.length);
+
+    targets.forEach((target) => {
+      const row = document.createElement("div");
+      row.className = `notion-settings-row${target.id === selectedId ? " is-selected" : ""}`;
+      const selectButton = document.createElement("button");
+      selectButton.type = "button";
+      selectButton.className = "notion-settings-select";
+      selectButton.dataset.targetId = target.id;
+      selectButton.innerHTML = '<span class="notion-settings-icon" aria-hidden="true">▧</span><span class="notion-settings-title"></span><span class="notion-settings-check" aria-hidden="true"></span>';
+      selectButton.querySelector(".notion-settings-title").textContent = target.title || "Untitled page";
+      selectButton.querySelector(".notion-settings-check").textContent = target.id === selectedId ? "✓" : "";
+      selectButton.addEventListener("click", async () => {
+        const notionTarget = {
+          id: target.id,
+          type: target.type || "page",
+          titleProperty: target.titleProperty || "title",
+          title: target.title || "Untitled page"
+        };
+        currentSettings = await root.storage.saveSettings({ notionTarget });
+        notionTargetNode.value = notionTarget.id;
+        renderNotionTargetLevel(notionTargetParentId, notionTargetPath);
+        setStatus(`${t("notionDefaultDestination")}: ${notionTarget.title}`);
+      });
+      row.appendChild(selectButton);
+
+      const hasChildren = notionTargets.some((item) => item.parentId === target.id);
+      if (hasChildren) {
+        const drillButton = document.createElement("button");
+        drillButton.type = "button";
+        drillButton.className = "notion-settings-drill";
+        drillButton.title = t("notionChooseDestination");
+        drillButton.setAttribute("aria-label", `${t("notionChooseDestination")}: ${target.title || "Untitled page"}`);
+        drillButton.textContent = "›";
+        drillButton.addEventListener("click", () => {
+          renderNotionTargetLevel(target.id, [...notionTargetPath, { id: target.id, title: target.title || "Untitled page" }]);
+        });
+        row.appendChild(drillButton);
+      }
+      notionTargetListNode.appendChild(row);
+    });
+  }
+
   async function refreshNotion() {
     const status = await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_STATUS });
     const connected = Boolean(status?.connected);
@@ -359,22 +458,24 @@
     notionStatusNode.classList.toggle("is-disconnected", !connected);
     notionConnectButton.hidden = Boolean(status?.connected);
     notionDisconnectButton.hidden = !status?.connected;
-    notionTargetNode.disabled = !status?.connected || !membership.isMember;
+    const browserDisabled = !status?.connected || !(PAID_FEATURES_TEMPORARILY_UNLOCKED || membership.isMember);
+    notionTargetNode.disabled = browserDisabled;
+    notionTargetBrowser.classList.toggle("is-disabled", browserDisabled);
     if (!status?.connected) {
-      notionTargetNode.replaceChildren(new Option(t("notionConnectFirst"), ""));
+      notionTargets = [];
+      notionTargetNode.value = "";
+      notionTargetListNode.replaceChildren();
+      notionTargetBack.hidden = true;
+      notionTargetPathNode.textContent = t("notionConnectFirst");
+      notionTargetEmptyNode.textContent = t("notionConnectFirst");
+      notionTargetEmptyNode.hidden = false;
       return;
     }
     const response = await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_TARGETS });
     if (!response?.ok) throw new Error(response?.error || "Could not load Notion destinations.");
-    notionTargetNode.replaceChildren();
-    notionTargetNode.add(new Option(t("notionChooseDestination"), ""));
-    response.targets.forEach((target) => {
-      const option = new Option(target.title, target.id);
-      option.dataset.type = target.type;
-      option.dataset.titleProperty = target.titleProperty || "title";
-      notionTargetNode.add(option);
-    });
-    if (currentSettings?.notionTarget?.id) notionTargetNode.value = currentSettings.notionTarget.id;
+    notionTargets = normalizeNotionTargets(response.targets);
+    notionTargetNode.value = currentSettings?.notionTarget?.id || "";
+    renderNotionTargetLevel(null, []);
   }
 
   function showNotionError(message) {
@@ -467,7 +568,8 @@
       if (saveMode) saveMode.checked = true;
       setValue("customDownloadFolder", settings.customDownloadFolder);
       setValue("autosaveConflictAction", settings.autosaveConflictAction);
-      if (settings.notionTarget?.id) notionTargetNode.value = settings.notionTarget.id;
+      notionTargetNode.value = settings.notionTarget?.id || "";
+      if (notionTargets.length) renderNotionTargetLevel(notionTargetParentId, notionTargetPath);
       setChecked("showHeaderExportButton", settings.showHeaderExportButton);
       setChecked("autoExportEnabled", AUTO_EXPORT_FEATURE_ENABLED && settings.autoExportEnabled);
       setValue("autoExportMode", settings.autoExportMode);
@@ -475,13 +577,7 @@
       renderFormatGroup(integrationFormatsNode, "integrationFormat", settings.integrationSelectedFormats);
       renderFormatGroup(autoExportFormatsNode, "autoExportFormat", settings.autoExportSelectedFormats);
 
-      const shouldLockPaid = membership.isFresh === true && !membership.isMember;
-      const paidControls = document.querySelectorAll(".paid-card input, .paid-card select");
-      paidControls.forEach((node) => {
-        node.disabled = shouldLockPaid;
-      });
-      document.querySelector(".paid-card")?.classList.toggle("is-locked", shouldLockPaid);
-      document.querySelector(".paid-card")?.classList.toggle("is-active-member", Boolean(membership.isMember));
+      applyMembershipAccessState();
     } finally {
       applyingSettings = false;
     }
@@ -489,7 +585,7 @@
 
   function readSettings() {
     const saveMode = form.querySelector('input[name="saveMode"]:checked')?.value || "autosave";
-    const isMember = Boolean(membership.isMember);
+    const isMember = Boolean(PAID_FEATURES_TEMPORARILY_UNLOCKED || membership.isMember);
     return {
       ...(currentSettings || {}),
       appTheme: document.getElementById("appTheme").value,
@@ -522,7 +618,7 @@
       saveMode,
       customDownloadFolder: document.getElementById("customDownloadFolder").value,
       autosaveConflictAction: document.getElementById("autosaveConflictAction").value,
-      notionTarget: notionTargetNode.value ? { id: notionTargetNode.value, type: notionTargetNode.selectedOptions[0]?.dataset.type || "page", titleProperty: notionTargetNode.selectedOptions[0]?.dataset.titleProperty || "title", title: notionTargetNode.selectedOptions[0]?.textContent || "" } : (currentSettings?.notionTarget || null),
+      notionTarget: currentSettings?.notionTarget || null,
       showHeaderExportButton: isMember
         ? document.getElementById("showHeaderExportButton").checked
         : Boolean(currentSettings?.showHeaderExportButton),
@@ -652,7 +748,11 @@
   tabButtons.forEach((button) => {
     button.addEventListener("click", () => activateTab(button.dataset.tab));
   });
-  loginButton.addEventListener("click", () => openUrl(`${WEB_URL}/account?extension_callback=1`));
+  loginButton.addEventListener("click", () => openUrl(`${WEB_URL}/?extension_callback=1#pricing`));
+  globalThis.addEventListener("focus", refreshMembershipOnFocus);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refreshMembershipOnFocus();
+  });
   logoutButton?.addEventListener("click", () => {
     chrome.storage.local.set({ [AUTH_LOGOUT_KEY]: new Date().toISOString() }, () => {
       chrome.storage.local.remove(AUTH_KEYS, () => {
@@ -661,6 +761,12 @@
     });
   });
   notionConnectButton?.addEventListener("click", openNotionConnectWindow);
+  notionTargetBack?.addEventListener("click", () => {
+    if (!notionTargetPath.length) return;
+    const nextPath = notionTargetPath.slice(0, -1);
+    const nextParentId = nextPath.length ? nextPath[nextPath.length - 1].id : null;
+    renderNotionTargetLevel(nextParentId, nextPath);
+  });
   notionDisconnectButton?.addEventListener("click", async () => {
     await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_DISCONNECT });
     currentSettings = await root.storage.saveSettings({ notionTarget: null });

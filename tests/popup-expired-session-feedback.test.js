@@ -38,9 +38,10 @@ async function run() {
 
     const popup = await context.newPage();
     await popup.goto(`chrome-extension://${extensionId}/src/popup/popup.html`);
-    await popup.locator("#loginPanel").waitFor({ state: "visible", timeout: 5000 });
+    await popup.locator("#exportPanel").waitFor({ state: "visible", timeout: 5000 });
 
-    assert.strictEqual(await popup.locator("#loginPanel").isVisible(), true, "Expired credentials must return the popup to its sign-in state.");
+    assert.strictEqual(await popup.locator("#loginPanel").isHidden(), true, "Expired credentials must not replace the export home with the sign-in form.");
+    assert.strictEqual(await popup.locator("#formatOptions .format-option").count(), 8, "Expired credentials must leave all eight formats visible on the home view.");
     assert.match(
       String(await popup.locator("#statusText").textContent()),
       /expired|sign in|log in|登录|登陆|过期/i,

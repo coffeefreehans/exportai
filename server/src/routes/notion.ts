@@ -1,9 +1,28 @@
 import { Router, Request, Response } from 'express';
 import { env } from '../config/env';
 import { authenticate } from '../middleware/auth';
+import { NotionQuotaService } from '../services/notion-quota.service';
 
 const router = Router();
 router.use(authenticate);
+
+router.get('/quota', async (req: Request, res: Response) => {
+  const userId = (req as any).user.id;
+  const quota = await NotionQuotaService.getStatus(userId);
+  return res.json({ code: 200, data: quota, message: 'ok' });
+});
+
+router.post('/quota/reserve', async (req: Request, res: Response) => {
+  const userId = (req as any).user.id;
+  const quota = await NotionQuotaService.reserve(userId, req.body?.requestId);
+  return res.json({ code: 200, data: quota, message: 'ok' });
+});
+
+router.post('/quota/release', async (req: Request, res: Response) => {
+  const userId = (req as any).user.id;
+  const result = await NotionQuotaService.release(userId, req.body?.requestId);
+  return res.json({ code: 200, data: result, message: 'ok' });
+});
 
 function requireNotionConfig() {
   if (!env.NOTION_CLIENT_ID || !env.NOTION_CLIENT_SECRET) {
@@ -32,7 +51,15 @@ router.post('/oauth/exchange', async (req: Request, res: Response) => {
     body: JSON.stringify({ grant_type: 'authorization_code', code, redirect_uri: redirectUri })
   });
   const body: any = await response.json();
-  if (!response.ok) return res.status(response.status).json({ code: response.status, data: null, message: body?.error_description || body?.message || 'Notion authorization failed.' });
+  if (!response.ok) {
+    const notionError = body?.error_description || body?.message || body?.error || 'Notion authorization failed.';
+    console.error('[Notion OAuth] Token exchange failed', {
+      status: response.status,
+      error: body?.error || '',
+      message: notionError
+    });
+    return res.status(response.status).json({ code: response.status, data: null, message: notionError });
+  }
   return res.json({ code: 200, data: { accessToken: body.access_token, workspaceId: body.workspace_id, workspaceName: body.workspace_name, workspaceIcon: body.workspace_icon, botId: body.bot_id }, message: 'ok' });
 });
 

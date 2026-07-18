@@ -28,9 +28,59 @@
       </div>
     </header>
 
-    <section id="loginPanel" class="panel" hidden>
-      <p data-i18n="signInPrompt">Please sign in to ExportAI before exporting.</p>
-      <button id="goLoginButton" class="primary-button" type="button" data-i18n="signIn">Sign in</button>
+    <section id="loginPanel" class="panel popup-login-panel" hidden>
+      <div class="popup-login-heading">
+        <span class="popup-login-mark" aria-hidden="true">E</span>
+        <div>
+          <h2 data-i18n="loginTitle">Sign in to ExportAI</h2>
+          <p data-i18n="signInPrompt">Sign in before exporting AI conversations.</p>
+        </div>
+      </div>
+
+      <form id="popupLoginForm" class="popup-login-form">
+        <label for="popupLoginEmail" data-i18n="emailLabel">Email</label>
+        <input id="popupLoginEmail" type="email" autocomplete="email" required data-i18n-placeholder="emailPlaceholder" placeholder="Enter your email">
+        <div class="popup-password-label">
+          <label for="popupLoginPassword" data-i18n="passwordLabel">Password</label>
+          <button id="popupForgotPassword" class="popup-auth-link" type="button" data-i18n="forgotPassword">Forgot password?</button>
+        </div>
+        <input id="popupLoginPassword" type="password" autocomplete="current-password" required data-i18n-placeholder="passwordPlaceholder" placeholder="Enter your password">
+        <button id="popupLoginSubmit" class="primary-button" type="submit" data-i18n="signIn">Sign in</button>
+      </form>
+
+      <div class="popup-login-divider"><span data-i18n="orText">or</span></div>
+      <button id="popupGoogleLogin" class="popup-google-button" type="button"><span aria-hidden="true">G</span><span data-i18n="googleSignIn">Continue with Google</span></button>
+      <p id="popupLoginStatus" class="popup-login-status" role="status" aria-live="polite"></p>
+      <p class="popup-register-row"><span data-i18n="noAccount">No account?</span> <button id="popupRegisterLink" class="popup-auth-link" type="button" data-i18n="registerNow">Create one</button></p>
+    </section>
+
+    <section id="accountPanel" class="panel popup-account-panel" hidden>
+      <div class="popup-account-heading">
+        <button id="accountBackButton" class="account-back-button" type="button" aria-label="Back" title="Back" data-i18n-aria-label="backButton" data-i18n-title="backButton">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.7 5.3-1.4-1.4L5.2 12l8.1 8.1 1.4-1.4L9 13h10v-2H9l5.7-5.7Z"/></svg>
+        </button>
+        <div class="popup-account-avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z"/></svg>
+        </div>
+        <div>
+          <h2 data-i18n="accountTitle">Account</h2>
+          <p data-i18n="accountSubtitle">Manage your ExportAI account here.</p>
+        </div>
+      </div>
+
+      <div class="popup-account-details">
+        <div class="popup-account-row">
+          <span data-i18n="emailLabel">Email</span>
+          <strong id="popupAccountEmail">-</strong>
+        </div>
+        <div class="popup-account-row">
+          <span data-i18n="membershipLabel">Membership</span>
+          <strong id="popupAccountPlan" class="popup-plan-badge">-</strong>
+        </div>
+      </div>
+
+      <button id="popupSubscriptionButton" class="primary-button popup-subscription-button" type="button" data-i18n="subscriptionButton">Subscription</button>
+      <button id="popupLogoutButton" class="popup-logout-button" type="button" data-i18n="logoutButton">Log out</button>
     </section>
 
     <div id="status" class="status" role="status" aria-live="polite" hidden>
@@ -48,6 +98,53 @@
       <div id="formatOptions" class="format-grid"></div>
       <button id="exportButton" class="primary-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v10.2l3.6-3.6L18 11l-6 6-6-6 1.4-1.4 3.6 3.6V3Zm-6 16h14v2H5v-2Z"/></svg><span data-i18n="export">Export</span></button>
       <button id="notionButton" class="primary-button notion-button" type="button"><span class="notion-mini-mark" aria-hidden="true">N</span><span id="notionButtonLabel" data-i18n="sendToNotion">Send to Notion</span></button>
+    </section>
+
+    <section id="notionFlow" class="notion-flow" hidden>
+      <div class="notion-flow-header">
+        <button id="notionBackButton" class="notion-back-button" type="button" aria-label="返回">‹</button>
+        <strong id="notionFlowTitle">连接 Notion</strong>
+        <span aria-hidden="true"></span>
+      </div>
+
+      <div id="notionLoginView" class="notion-view" hidden>
+        <div class="service-link" aria-hidden="true">
+          <span class="service-logo exportai-logo">E</span><span class="service-arrows">⇄</span><span class="service-logo notion-logo">N</span>
+        </div>
+        <p id="notionLoginHint" class="notion-flow-hint">选择 ExportAI 登录方式后连接 Notion</p>
+        <button id="notionContinueAccount" class="notion-choice-button is-primary" type="button" hidden></button>
+        <button id="notionGoogleLogin" class="notion-choice-button" type="button"><span class="google-g" aria-hidden="true">G</span>使用 Google 登录</button>
+        <button id="notionEmailToggle" class="notion-email-toggle" type="button">使用邮箱登录</button>
+        <form id="notionEmailForm" class="notion-email-form" hidden>
+          <label>邮箱<input id="notionEmail" type="email" autocomplete="email" required></label>
+          <label>密码<input id="notionPassword" type="password" autocomplete="current-password" required></label>
+          <button id="notionEmailSubmit" class="notion-choice-button is-primary" type="submit">登录并连接 Notion</button>
+        </form>
+      </div>
+
+      <div id="notionWaitingView" class="notion-view notion-waiting-view" hidden>
+        <div class="service-link" aria-hidden="true">
+          <span class="service-logo exportai-logo">E</span><span class="service-arrows">⇄</span><span class="service-logo google-logo">G</span>
+        </div>
+        <strong id="notionWaitingTitle">正在等待 Google 登录…</strong>
+        <p id="notionWaitingText">登录完成后会自动继续</p>
+      </div>
+
+      <div id="notionTargetsView" class="notion-view" hidden>
+        <div class="targets-heading">
+          <div><span>选择保存位置</span><small id="notionWorkspaceText">Notion</small></div>
+          <button id="notionManageAccess" class="target-settings-button" type="button" title="更新访问权限" aria-label="更新访问权限">⚙</button>
+        </div>
+        <div class="notion-target-navigation">
+          <button id="notionLevelBack" class="notion-level-back" type="button" aria-label="返回上一级" title="返回上一级" hidden>‹</button>
+          <div id="notionBreadcrumb" class="notion-breadcrumb">全部页面</div>
+        </div>
+        <div id="notionTargetList" class="notion-target-list"></div>
+        <p id="notionEmptyTargets" class="notion-empty" hidden>没有找到可用页面，请先更新访问权限。</p>
+        <button id="notionDisconnect" class="notion-text-button" type="button">断开 Notion 连接</button>
+      </div>
+
+      <p id="notionFlowStatus" class="notion-flow-status" role="status" aria-live="polite"></p>
     </section>
   </main>
 

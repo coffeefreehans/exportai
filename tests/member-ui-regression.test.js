@@ -18,7 +18,8 @@ assert(optionsHtml.includes("accountEmail"), "settings header must have a visibl
 assert(optionsHtml.includes("accountPlan"), "settings header must have a visible membership status target.");
 assert(optionsHtml.includes("logoutButton"), "settings header must expose a logout button.");
 assert(!optionsHtml.includes("integrationAccountEmail"), "Integration card must not repeat account status.");
-assert(optionsJs.includes("membership.isFresh === true && !membership.isMember"), "paid controls must not be locked by stale free cached membership.");
+assert(!optionsHtml.includes("paidBadge"), "Integration title must not show a paid badge.");
+assert(optionsJs.includes("membership.isFresh === true && !PAID_FEATURES_TEMPORARILY_UNLOCKED && !membership.isMember"), "paid controls must respect the temporary unlock and must not be locked by stale free cached membership.");
 assert(optionsJs.includes("is-active-member"), "settings must mark Integration as active for paid users.");
 assert(optionsJs.includes("exportai_auth_logout_at"), "settings logout must write a logout marker for web sync.");
 assert(optionsJs.includes("showHeaderExportButtonClaude"), "settings save must heal hidden legacy provider floating-button switches.");
@@ -34,7 +35,11 @@ assert(webAuthBridge.includes("exportai-auth-sync"), "web auth bridge must notif
 assert(webAuthBridge.includes("location.assign"), "web auth bridge must navigate when extension auth changes while web is open.");
 assert(authForm.includes("resolveReturnPath"), "web login/register must return to the requested page.");
 assert(authForm.includes("api.getMembership().catch"), "web login/register must refresh membership before returning.");
-assert(popupJs.includes("/login?return=/account&extension_callback=1"), "extension login entry must return the web user to the account page through an explicit callback session.");
-assert(optionsJs.includes("/account?extension_callback=1"), "settings account link must open the web account through an explicit callback session.");
+assert(popupHtml.includes('id="popupLoginForm"'), "extension email login must render inside the popup.");
+assert(popupJs.includes('type: "EXPORTAI_ACCOUNT_LOGIN"'), "extension email login must use the background login API.");
+assert(popupJs.includes("/register?return=/account&extension_callback=1"), "extension registration must open the web registration callback flow.");
+assert(popupJs.includes("/forgot-password"), "extension forgot-password entry must open the web reset-request flow.");
+assert(optionsHtml.includes('data-i18n="subscriptionButton"'), "settings header must label the account action as Subscription.");
+assert(optionsJs.includes("/?extension_callback=1#pricing"), "settings subscription link must open web pricing with account sync.");
 
 console.log("member ui regression passed");

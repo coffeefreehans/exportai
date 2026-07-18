@@ -23,7 +23,7 @@
           <strong id="accountEmail">Not signed in</strong>
           <span id="accountPlan">Free account</span>
         </div>
-        <button id="loginButton" class="ghost-button" type="button" data-i18n="accountButton">Account</button>
+        <button id="loginButton" class="ghost-button subscription-button" type="button" data-i18n="subscriptionButton">Subscription</button>
         <button id="logoutButton" class="ghost-button danger-button" type="button" data-i18n="logoutButton">Logout</button>
       </div>
     </header>
@@ -80,7 +80,7 @@
         </section>
 
         <section class="settings-panel card paid-card" id="panel-integration" role="tabpanel" aria-labelledby="tab-integration" data-panel="integration" hidden>
-          <h2><span data-i18n="integrationTitle">Integration</span> <span id="paidBadge" class="badge">Paid</span></h2>
+          <h2><span data-i18n="integrationTitle">Integration</span></h2>
         <div class="notion-card">
           <div class="notion-card__header">
             <div class="notion-mark" aria-hidden="true"><span>N</span></div>
@@ -92,7 +92,18 @@
             <button id="notionDisconnect" class="ghost-button notion-action" type="button" data-i18n="notionDisconnect" hidden>Disconnect</button>
           </div>
           <div class="notion-card__divider"></div>
-          <label class="field notion-target-field"><span data-i18n="notionDefaultDestination">Default destination</span><select id="notionTarget"><option value="" data-i18n="notionConnectFirst">Connect Notion first</option></select></label>
+          <div class="notion-target-field">
+            <span class="notion-target-label" data-i18n="notionDefaultDestination">Default destination</span>
+            <input id="notionTarget" type="hidden" value="">
+            <div id="notionTargetBrowser" class="notion-settings-browser is-disabled">
+              <div class="notion-settings-browser__nav">
+                <button id="notionTargetBack" class="notion-settings-back" type="button" aria-label="Back one level" title="Back one level" hidden>‹</button>
+                <strong id="notionTargetPath">Connect Notion first</strong>
+              </div>
+              <div id="notionTargetList" class="notion-settings-list"></div>
+              <p id="notionTargetEmpty" class="notion-settings-empty" data-i18n="notionConnectFirst">Connect Notion first</p>
+            </div>
+          </div>
           <div class="notion-privacy">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4.5 5v5.7c0 4.8 3 9.2 7.5 11.3 4.5-2.1 7.5-6.5 7.5-11.3V5L12 2Zm0 2.2 5.3 2.1v4.4c0 3.7-2.1 7.2-5.3 9-3.2-1.8-5.3-5.3-5.3-9V6.3L12 4.2Zm-1 4.2v4.4l3.8 2.2 1-1.7-2.8-1.6V8.4h-2Z"/></svg>
             <span data-i18n="notionPrivacy">Chat content is sent directly from your browser to Notion. ExportAI does not store message content.</span>

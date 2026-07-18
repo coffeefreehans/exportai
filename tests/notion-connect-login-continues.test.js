@@ -69,6 +69,7 @@ async function run() {
 
     const page = await context.newPage();
     await page.goto(`chrome-extension://${extensionId}/src/notion-connect/notion-connect.html`);
+    await page.locator("#emailLoginToggle").click();
     await page.locator("#loginEmail").fill("1234@test.com");
     await page.locator("#loginPassword").fill("test-password");
     await page.locator("#loginSubmit").click();

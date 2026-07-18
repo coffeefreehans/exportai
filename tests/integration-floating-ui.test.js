@@ -145,8 +145,10 @@ async function getStorage(extensionPage) {
         chrome.tabs.sendMessage(tab.id, { type: "EXPORTAI_GET_INTEGRATION_STATUS" }, resolve);
       });
     }));
-    assert.strictEqual(freeDiagnostics.visible, false);
-    assert.strictEqual(freeDiagnostics.reason, "not_member");
+    assert.strictEqual(freeDiagnostics.visible, true);
+    assert.strictEqual(freeDiagnostics.reason, "visible");
+    assert.strictEqual(freeDiagnostics.isMember, false, "Temporary access must not falsify the real membership state.");
+    assert.strictEqual(freeDiagnostics.paidFeatureAccess, true, "Free accounts must receive temporary paid-feature access.");
 
     await writeExtensionState(optionsPage, { isMember: true, showButton: false });
     await chatPage.reload();

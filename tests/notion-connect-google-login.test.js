@@ -30,6 +30,7 @@ async function run() {
     const reply = (status, body) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
     if (url.pathname === "/api/auth/google") {
       googleLoginCount += 1;
+      await new Promise((resolve) => setTimeout(resolve, 250));
       assert.deepStrictEqual(request.postDataJSON(), { accessToken: "google-access-token" });
       return reply(200, {
         code: 200,
@@ -77,6 +78,8 @@ async function run() {
     const page = await context.newPage();
     await page.goto(`chrome-extension://${extensionId}/src/notion-connect/notion-connect.html`);
     await page.locator("#googleLoginButton").click();
+    await page.locator("#waitingPanel").waitFor({ state: "visible", timeout: 3000 });
+    assert.match(String(await page.locator("#waitingPanel h1").textContent()), /Google/i);
 
     const deadline = Date.now() + 5000;
     while ((googleLoginCount < 1 || notionStartCount < 1) && Date.now() < deadline) {

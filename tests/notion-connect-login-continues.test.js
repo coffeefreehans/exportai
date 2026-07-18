@@ -86,7 +86,7 @@ async function run() {
     assert.strictEqual(stored.exportai_access_token, "fresh-access-token");
     assert.strictEqual(stored.exportai_refresh_token, "fresh-refresh-token");
     assert.strictEqual(startCount, 1, "Successful ExportAI login must automatically continue to Notion OAuth.");
-    assert.match(String(await page.locator("#statusText").textContent()), /Notion/i);
+    assert.match(String(await page.locator("#oauthPanel").textContent()), /Notion/i);
   } finally {
     await context.close();
     fs.rmSync(userDataDir, { recursive: true, force: true });

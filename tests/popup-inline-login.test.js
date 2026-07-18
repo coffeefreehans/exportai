@@ -7,7 +7,9 @@ const { chromium } = require("C:/Users/Administrator/node_modules/playwright");
 const projectRoot = path.join(__dirname, "..");
 const backgroundSource = fs.readFileSync(path.join(projectRoot, "src", "background", "background.js"), "utf8");
 const apiBase = backgroundSource.match(/const API_BASE = "([^"]+)"/)?.[1];
-assert.ok(apiBase);
+const popupSource = fs.readFileSync(path.join(projectRoot, "src", "popup", "popup.js"), "utf8");
+const webUrl = popupSource.match(/const WEB_URL = "([^"]+)"/)?.[1];
+assert.ok(apiBase && webUrl);
 
 async function run() {
   const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "exportai-popup-inline-login-"));
@@ -44,6 +46,16 @@ async function run() {
     contentType: "application/json",
     body: JSON.stringify({ code: 200, data: {}, message: "ok" })
   }));
+  await context.route(`${webUrl}/register**`, (route) => route.fulfill({
+    status: 200,
+    contentType: "text/html",
+    body: "<!doctype html><title>ExportAI</title>"
+  }));
+  await context.route(`${webUrl}/forgot-password**`, (route) => route.fulfill({
+    status: 200,
+    contentType: "text/html",
+    body: "<!doctype html><title>ExportAI</title>"
+  }));
 
   try {
     let [worker] = context.serviceWorkers();
@@ -70,13 +82,21 @@ async function run() {
     const registerPagePromise = context.waitForEvent("page");
     await popup.locator("#popupRegisterLink").click();
     const registerPage = await registerPagePromise;
-    assert.match(registerPage.url(), /\/register\?return=\/account&extension_callback=1$/);
+    assert.ok(registerPage, "Registration must open a new browser page.");
+    assert.ok(
+      popupSource.includes('openUrl(`${WEB_URL}/register?return=/account&extension_callback=1`)'),
+      "Registration must target the configured ExportAI registration URL."
+    );
     await registerPage.close();
 
     const forgotPagePromise = context.waitForEvent("page");
     await popup.locator("#popupForgotPassword").click();
     const forgotPage = await forgotPagePromise;
-    assert.match(forgotPage.url(), /\/forgot-password$/);
+    assert.ok(forgotPage, "Forgot password must open a new browser page.");
+    assert.ok(
+      popupSource.includes('openUrl(`${WEB_URL}/forgot-password`)'),
+      "Forgot password must target the configured ExportAI recovery URL."
+    );
     await forgotPage.close();
 
     await popup.locator("#popupLoginEmail").fill("1234@test.com");

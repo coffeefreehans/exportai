@@ -4,26 +4,21 @@
 ExportAI - AI Conversation Exporter
 
 ## Short description
-Export complete AI conversations in 8 formats or send them directly to Notion.
+Save complete AI conversations as files or send them to your Notion workspace.
 
 ## Full description
-ExportAI is a browser extension for saving and organizing complete AI chat records. Export conversations as common file types or send them directly to an authorized Notion page for knowledge archives, project records, research, and team handoff.
+ExportAI helps you save and organize complete conversations from supported AI chat websites. Open a conversation, choose the type of copy you need, and create one or several files from the extension popup.
 
-Key features:
-- Export as TXT, PDF, MHT, HTML, MD, DOCX, XLSX, or PNG.
-- Select multiple formats in the popup and generate them in one action.
-- Preserve code blocks, lists, tables, math, images, and attachment-related content where supported.
-- Works with ChatGPT, Claude, Gemini, Grok, DeepSeek, Doubao, Qwen, Zhipu, Kimi, MiniMax, and other listed AI chat pages.
-- Sign in, view account status, and connect Notion inside the main extension popup.
-- Browse authorized Notion pages by hierarchy and select any available page or database as the destination.
-- Free accounts can send to Notion 3 times per day; active members have unlimited Notion sends.
-- Export processing happens primarily in the browser. ExportAI does not store the body of your conversations.
+The extension can produce readable documents, web archives, spreadsheets, and image-based copies. It aims to preserve the conversation structure, including code blocks, lists, tables, formulas, images, and attachment-related content when the source page makes that content available.
 
-Privacy note:
-The account server is used for login, membership status, the free Notion quota, and settings sync. It does not store exported chat content. Notion content is sent directly from the browser to the user's authorized Notion workspace. Make sure you have permission to save the conversations you export.
+You can also connect your own Notion workspace from the main popup. After authorization, browse the available page hierarchy and choose a page or database as the destination. Free accounts may send up to three conversations to Notion each day; active members do not have a daily Notion sending limit.
+
+Exports are started by the user and processed primarily in the browser. The ExportAI account service is used for sign-in, membership status, the free Notion allowance, and settings synchronization. It does not store the body of exported conversations. Content sent to Notion goes directly from the browser to the user's authorized workspace.
+
+Only save conversations that you have permission to retain.
 
 ## Search terms
-AI conversation export, chat archive, conversation backup, Notion
+conversation export, Notion archive
 
 ## Permission notes
 - activeTab/tabs: detect the current supported AI chat page and read exportable conversation content.

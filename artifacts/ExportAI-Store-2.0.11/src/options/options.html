@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ExportAI Settings</title>
+  <link rel="stylesheet" href="./options.css">
+</head>
+<body>
+  <main class="settings-shell">
+    <header class="hero">
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M7 5h9.5L14 2.5 15.5 1 21 6.5 15.5 12 14 10.5 16.5 8H9v8h4v3H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm10 10v2h-1.5l2.5 2.5-1.5 1.5L11 15.5l5.5-5.5 1.5 1.5-2.5 2.5H17Z"/></svg>
+        </div>
+        <div>
+          <h1 data-i18n="title">ExportAI Settings</h1>
+          <p id="status" data-i18n="initialStatus">Local settings will load first, then sync to your account.</p>
+        </div>
+      </div>
+      <div class="account-chip" aria-label="Account">
+        <div>
+          <strong id="accountEmail">Not signed in</strong>
+          <span id="accountPlan">Free account</span>
+        </div>
+        <button id="loginButton" class="ghost-button subscription-button" type="button" data-i18n="subscriptionButton">Subscription</button>
+        <button id="logoutButton" class="ghost-button danger-button" type="button" data-i18n="logoutButton">Logout</button>
+      </div>
+    </header>
+
+    <form id="settingsForm" class="settings-form">
+      <div class="settings-layout">
+        <nav class="settings-tabs" role="tablist" aria-label="Settings sections">
+          <button class="tab-button is-active" id="tab-general" type="button" role="tab" aria-selected="true" aria-controls="panel-general" data-tab="general"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.1 12.9c.1-.6.1-1.2 0-1.8l2-1.6-2-3.5-2.5 1a8 8 0 0 0-1.6-.9L14.6 3h-4.1l-.4 3.1c-.6.2-1.1.5-1.6.9L6 6 4 9.5l2 1.6a7 7 0 0 0 0 1.8l-2 1.6L6 18l2.5-1c.5.4 1 .7 1.6.9l.4 3.1h4.1l.4-3.1c.6-.2 1.1-.5 1.6-.9l2.5 1 2-3.5-2-1.6ZM12.5 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></svg><span data-i18n="tabGeneral">General</span></button>
+          <button class="tab-button" id="tab-export" type="button" role="tab" aria-selected="false" aria-controls="panel-export" data-tab="export"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v10l3.5-3.5L18 11l-6 6-6-6 1.5-1.5L11 13V3ZM5 19h14v2H5v-2Z"/></svg><span data-i18n="tabExport">Export</span></button>
+          <button class="tab-button" id="tab-files" type="button" role="tab" aria-selected="false" aria-controls="panel-files" data-tab="files"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5Zm2 3v11h14V8H5Z"/></svg><span data-i18n="tabFiles">Files</span></button>
+          <button class="tab-button" id="tab-integration" type="button" role="tab" aria-selected="false" aria-controls="panel-integration" data-tab="integration"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6v4h4v6h-4v4H9v-4H5V7h4V3Zm2 2v4H7v2h4v4h2v-4h4V9h-4V5h-2Z"/></svg><span data-i18n="tabIntegration">Integration</span></button>
+        </nav>
+
+        <section class="settings-panel card is-active" id="panel-general" role="tabpanel" aria-labelledby="tab-general" data-panel="general">
+          <h2 data-i18n="generalTitle">General</h2>
+        <label class="field"><span data-i18n="appTheme">App theme</span><select id="appTheme" name="appTheme"><option value="auto" data-i18n="themeAuto">Auto</option><option value="light" data-i18n="themeLight">Light</option><option value="dark" data-i18n="themeDark">Dark</option></select></label>
+        <label class="field"><span data-i18n="language">Language</span><select id="appLanguage" name="appLanguage"><option value="en">English</option><option value="zh-CN">中文</option></select></label>
+        <div class="group-title" data-i18n="reasoningTime">Reasoning and time</div>
+        <label class="check"><input id="includeThinking" name="includeThinking" type="checkbox"> <span data-i18n="includeThinking">Export visible reasoning</span></label>
+        <label class="check"><input id="includeThinkingDuration" name="includeThinkingDuration" type="checkbox"> <span data-i18n="includeThinkingDuration">Export reasoning duration</span></label>
+        <label class="check"><input id="includeMessageTime" name="includeMessageTime" type="checkbox"> <span data-i18n="includeMessageTime">Export message time</span></label>
+        <div class="group-title" data-i18n="referencesAttachments">References and attachments</div>
+        <label class="check"><input id="showUserAttachmentNames" name="showUserAttachmentNames" type="checkbox"> <span data-i18n="userAttachments">User attachments</span></label>
+        <label class="check"><input id="showAssistantUserAttachmentReferences" name="showAssistantUserAttachmentReferences" type="checkbox"> <span data-i18n="assistantUserRefs">Assistant references to user files</span></label>
+        <label class="check"><input id="showAssistantGeneratedAttachmentReferences" name="showAssistantGeneratedAttachmentReferences" type="checkbox"> <span data-i18n="assistantGeneratedFiles">Assistant generated files</span></label>
+        <label class="check"><input id="showAssistantWebReferences" name="showAssistantWebReferences" type="checkbox"> <span data-i18n="webReferences">Web references</span></label>
+        </section>
+
+        <section class="settings-panel card" id="panel-export" role="tabpanel" aria-labelledby="tab-export" data-panel="export" hidden>
+          <h2 data-i18n="exportTitle">Export</h2>
+        <div class="group-title" data-i18n="txtExport">TXT Export</div>
+        <label class="field"><span data-i18n="humanName">Human name</span><input id="humanName" name="humanName" type="text"></label>
+        <label class="field"><span data-i18n="aiName">AI name</span><input id="aiCustomName" name="aiCustomName" type="text"></label>
+        <label class="field"><span data-i18n="textFormatting">Text formatting</span><select id="textFormatting" name="textFormatting"><option value="markdown">Markdown</option><option value="clean" data-i18n="cleanText">Clean text</option></select></label>
+        <label class="field"><span data-i18n="multilineStyle">Multiline style</span><select id="multilineFormat" name="multilineFormat"><option value="tab" data-i18n="tab">Tab</option><option value="name" data-i18n="name">Name</option><option value="none" data-i18n="none">None</option></select></label>
+        <div class="group-title" data-i18n="metadata">Metadata</div>
+        <label class="check"><input id="metadataEnabled" name="metadataEnabled" type="checkbox"> <span data-i18n="enableMetadata">Enable metadata</span></label>
+        <label class="check"><input id="includeExportTitle" name="includeExportTitle" type="checkbox"> <span data-i18n="exportTitleToggle">Export title</span></label>
+        <label class="check"><input id="metadataExportedAt" name="metadataExportedAt" type="checkbox"> <span data-i18n="date">Date</span></label>
+        <label class="check"><input id="metadataModel" name="metadataModel" type="checkbox"> <span data-i18n="model">Model</span></label>
+        <label class="check"><input id="metadataUrl" name="metadataUrl" type="checkbox"> <span data-i18n="url">URL</span></label>
+        <label class="check"><input id="metadataSummaryChatName" name="metadataSummaryChatName" type="checkbox"> <span data-i18n="chatName">Chat name</span></label>
+        <label class="check"><input id="metadataSummaryMessages" name="metadataSummaryMessages" type="checkbox"> <span data-i18n="messageCount">Message count</span></label>
+        </section>
+
+        <section class="settings-panel card" id="panel-files" role="tabpanel" aria-labelledby="tab-files" data-panel="files" hidden>
+          <h2 data-i18n="filesTitle">Files</h2>
+        <div class="group-title" data-i18n="downloadBehavior">Download behavior</div>
+        <label class="radio"><input type="radio" name="saveMode" value="autosave"> <span data-i18n="downloadFolder">To download folder</span></label>
+        <label class="radio"><input type="radio" name="saveMode" value="custom"> <span data-i18n="customSubfolder">To custom subfolder (inside Downloads)</span></label>
+        <label class="radio"><input type="radio" name="saveMode" value="ask"> <span data-i18n="askLocation">Ask for location</span></label>
+        <label class="field"><span data-i18n="customSubfolderLabel">Custom subfolder</span><input id="customDownloadFolder" name="customDownloadFolder" type="text"></label>
+        <label class="field"><span data-i18n="conflictAction">Conflict action</span><select id="autosaveConflictAction" name="autosaveConflictAction"><option value="overwrite" data-i18n="overwrite">Overwrite</option><option value="uniquify" data-i18n="keepBoth">Keep both</option></select></label>
+        </section>
+
+        <section class="settings-panel card paid-card" id="panel-integration" role="tabpanel" aria-labelledby="tab-integration" data-panel="integration" hidden>
+          <h2><span data-i18n="integrationTitle">Integration</span></h2>
+        <div class="notion-card">
+          <div class="notion-card__header">
+            <div class="notion-mark" aria-hidden="true"><span>N</span></div>
+            <div class="notion-card__identity">
+              <strong>Notion</strong>
+              <p id="notionStatus" class="notion-status"><span class="notion-status__dot" aria-hidden="true">✓</span><span id="notionStatusText" data-i18n="notionNotConnected">Not connected</span></p>
+            </div>
+            <button id="notionConnect" class="ghost-button notion-action" type="button" data-i18n="notionConnect">Connect</button>
+            <button id="notionDisconnect" class="ghost-button notion-action" type="button" data-i18n="notionDisconnect" hidden>Disconnect</button>
+          </div>
+          <div class="notion-card__divider"></div>
+          <div class="notion-target-field">
+            <span class="notion-target-label" data-i18n="notionDefaultDestination">Default destination</span>
+            <input id="notionTarget" type="hidden" value="">
+            <div id="notionTargetBrowser" class="notion-settings-browser is-disabled">
+              <div class="notion-settings-browser__nav">
+                <button id="notionTargetBack" class="notion-settings-back" type="button" aria-label="Back one level" title="Back one level" hidden>‹</button>
+                <strong id="notionTargetPath">Connect Notion first</strong>
+              </div>
+              <div id="notionTargetList" class="notion-settings-list"></div>
+              <p id="notionTargetEmpty" class="notion-settings-empty" data-i18n="notionConnectFirst">Connect Notion first</p>
+            </div>
+          </div>
+          <div class="notion-privacy">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4.5 5v5.7c0 4.8 3 9.2 7.5 11.3 4.5-2.1 7.5-6.5 7.5-11.3V5L12 2Zm0 2.2 5.3 2.1v4.4c0 3.7-2.1 7.2-5.3 9-3.2-1.8-5.3-5.3-5.3-9V6.3L12 4.2Zm-1 4.2v4.4l3.8 2.2 1-1.7-2.8-1.6V8.4h-2Z"/></svg>
+            <span data-i18n="notionPrivacy">Chat content is sent directly from your browser to Notion. ExportAI does not store message content.</span>
+          </div>
+        </div>
+        <div class="group-title" data-i18n="inPageExportButton">In-page export button</div>
+        <label class="check"><input id="showHeaderExportButton" name="showHeaderExportButton" type="checkbox"> <span data-i18n="enableFloatingExport">Enable draggable floating export</span></label>
+        <div class="format-row" id="integrationFormats"></div>
+        <div id="autoExportSettings" hidden>
+          <div class="group-title" data-i18n="exportRuntime">Export runtime</div>
+          <label class="check"><input id="autoExportEnabled" name="autoExportEnabled" type="checkbox"> <span data-i18n="enableAutoExport">Enable auto export</span></label>
+          <label class="field"><span data-i18n="autoExportMode">Auto export mode</span><select id="autoExportMode" name="autoExportMode"><option value="change" data-i18n="onChange">On change</option><option value="interval" data-i18n="everyNMinutes">Every N minutes</option></select></label>
+          <label class="field"><span data-i18n="intervalMinutes">Interval minutes</span><input id="autoExportIntervalSeconds" name="autoExportIntervalSeconds" type="number" min="1" max="1440"></label>
+          <p class="setting-hint" data-i18n="autoExportManualSeedHint">Auto export starts only after you manually export this conversation once. It reuses that saved filename and overwrites it silently.</p>
+          <div class="format-row" id="autoExportFormats"></div>
+        </div>
+        </section>
+      </div>
+    </form>
+  </main>
+
+  <script src="../shared/namespace.js"></script>
+  <script src="../shared/constants.js"></script>
+  <script src="../shared/default-settings.js"></script>
+  <script src="../shared/extension-bridge.js"></script>
+  <script src="../shared/storage.js"></script>
+  <script src="../shared/app-theme.js"></script>
+  <script src="./options.js"></script>
+</body>
+</html>

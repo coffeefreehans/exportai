@@ -1,0 +1,180 @@
+{
+  "manifest_version": 3,
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtngjAik73XbPcIfRXzEi0gjFvTCHOpNQRknm6R0HsOsAIfknO+UDEsdut+tFaQxktWETsxi9AUloKwvWc8MklzPvwihCrI+3Uyh8UbtohzrnQZsH7r4cGKXso59osbTp6srLfGz+5tFmkvMJD6clhj/7JvpZdio9vzK8lep8rGBFp/HwZefVFabTPXzarfWX9M+1rsTSUOwi5GWu+TS4Vxg6szk0shF4D+Ot4wxlZZVQrdlAI3B15nX5y9Ev4/y/dJDU6P/rEt9M336NEiOQMTYUQrgtgt4XZbtwQAlM2gLn8xzBglFbhgNzNB3Wt3zV6SJKdtNZMjIUknJNU6o2yQIDAQAB",
+  "name": "__MSG_extensionName__",
+  "version": "2.0.10",
+  "default_locale": "en",
+  "description": "__MSG_extensionDescription__",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "downloads",
+    "alarms",
+    "tabs",
+    "debugger",
+    "pageCapture",
+    "identity"
+  ],
+  "oauth2": {
+    "client_id": "891051751565-g85afrj516bveud2pgs9bhf7soi5arln.apps.googleusercontent.com",
+    "scopes": [
+      "openid",
+      "email",
+      "profile"
+    ]
+  },
+  "host_permissions": [
+    "https://claude.ai/*",
+    "https://chat.openai.com/*",
+    "https://chatgpt.com/*",
+    "https://gemini.google.com/*",
+    "https://grok.com/*",
+    "https://chat.deepseek.com/*",
+    "https://www.doubao.com/*",
+    "https://doubao.com/*",
+    "https://www.dola.com/*",
+    "https://dola.com/*",
+    "https://www.tongyi.com/*",
+    "https://tongyi.aliyun.com/*",
+    "https://chatglm.cn/*",
+    "https://www.chatglm.cn/*",
+    "https://z.ai/*",
+    "https://chat.z.ai/*",
+    "https://kimi.moonshot.cn/*",
+    "https://www.kimi.com/*",
+    "https://kimi.com/*",
+    "https://chat.minimax.io/*",
+    "https://agent.minimaxi.com/*",
+    "https://www.minimax.io/*",
+    "https://minimax.io/*",
+    "https://hailuo.ai/*",
+    "https://www.hailuo.ai/*",
+    "https://hailuoai.com/*",
+    "https://www.hailuoai.com/*",
+    "http://localhost:4000/*",
+    "https://api.notion.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background/background.js"
+  },
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:3002/*",
+        "http://localhost:3000/*"
+      ],
+      "js": [
+        "src/shared/web-auth-bridge.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://claude.ai/*",
+        "https://chat.openai.com/*",
+        "https://chatgpt.com/*",
+        "https://gemini.google.com/*",
+        "https://grok.com/*",
+        "https://chat.deepseek.com/*",
+        "https://www.doubao.com/*",
+        "https://doubao.com/*",
+        "https://www.dola.com/*",
+        "https://dola.com/*",
+        "https://www.tongyi.com/*",
+        "https://tongyi.aliyun.com/*",
+        "https://chatglm.cn/*",
+        "https://www.chatglm.cn/*",
+        "https://z.ai/*",
+        "https://chat.z.ai/*",
+        "https://kimi.moonshot.cn/*",
+        "https://www.kimi.com/*",
+        "https://kimi.com/*",
+        "https://chat.minimax.io/*",
+        "https://agent.minimaxi.com/*",
+        "https://www.minimax.io/*",
+        "https://minimax.io/*",
+        "https://hailuo.ai/*",
+        "https://www.hailuo.ai/*",
+        "https://hailuoai.com/*",
+        "https://www.hailuoai.com/*"
+      ],
+      "js": [
+        "src/shared/namespace.js",
+        "src/shared/constants.js",
+        "src/shared/default-settings.js",
+        "src/shared/extension-bridge.js",
+        "src/shared/storage.js",
+        "src/shared/app-theme.js",
+        "src/shared/sanitize.js",
+        "src/shared/text-converter.js",
+        "src/shared/post-process.js",
+        "src/shared/export-engine.js",
+        "src/shared/button-system.js",
+        "src/providers/provider-registry.js",
+        "src/providers/claude-provider.js",
+        "src/providers/chatgpt-provider.js",
+        "src/providers/gemini-provider.js",
+        "src/providers/deepseek-provider.js",
+        "src/providers/grok-provider.js",
+        "src/providers/chinese-ai-provider.js",
+        "src/content/ui-export-button.js",
+        "src/content/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/background/pdf-render-tab.html"
+      ],
+      "matches": [
+        "https://claude.ai/*",
+        "https://chat.openai.com/*",
+        "https://chatgpt.com/*",
+        "https://gemini.google.com/*",
+        "https://grok.com/*",
+        "https://chat.deepseek.com/*",
+        "https://www.doubao.com/*",
+        "https://doubao.com/*",
+        "https://www.dola.com/*",
+        "https://dola.com/*",
+        "https://www.tongyi.com/*",
+        "https://tongyi.aliyun.com/*",
+        "https://chatglm.cn/*",
+        "https://www.chatglm.cn/*",
+        "https://z.ai/*",
+        "https://chat.z.ai/*",
+        "https://kimi.moonshot.cn/*",
+        "https://www.kimi.com/*",
+        "https://kimi.com/*",
+        "https://chat.minimax.io/*",
+        "https://agent.minimaxi.com/*",
+        "https://www.minimax.io/*",
+        "https://minimax.io/*",
+        "https://hailuo.ai/*",
+        "https://www.hailuo.ai/*",
+        "https://hailuoai.com/*",
+        "https://www.hailuoai.com/*"
+      ]
+    }
+  ],
+  "options_page": "src/options/options.html"
+}

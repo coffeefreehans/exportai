@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ExportAI · Notion</title>
+  <link rel="stylesheet" href="./notion-connect.css">
+</head>
+<body>
+  <header class="window-bar">
+    <strong>ExportAI</strong>
+    <button id="closeButton" class="icon-button" type="button" aria-label="关闭">×</button>
+  </header>
+
+  <main class="connect-shell">
+    <section id="identityHeader" class="identity-header" aria-hidden="true">
+      <div class="service-mark exportai-mark">E</div>
+      <div class="link-arrows">⇄</div>
+      <div class="service-mark notion-mark">N</div>
+    </section>
+
+    <p id="statusText" class="status-text" role="status" aria-live="polite"></p>
+
+    <section id="loginPanel" class="view login-view" hidden>
+      <h1>连接 Notion</h1>
+      <p class="view-hint">先选择 ExportAI 登录方式，登录后会自动继续 Notion 授权。</p>
+      <button id="continueAccountButton" class="account-button" type="button" hidden></button>
+      <button id="googleLoginButton" class="google-button" type="button">
+        <span class="google-mark" aria-hidden="true">G</span>
+        <span>使用 Google 登录</span>
+      </button>
+      <button id="emailLoginToggle" class="secondary-button" type="button">使用邮箱登录</button>
+      <form id="emailLoginForm" hidden>
+        <label>
+          <span>邮箱</span>
+          <input id="loginEmail" type="email" autocomplete="username" placeholder="请输入邮箱" required>
+        </label>
+        <label>
+          <span>密码</span>
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入密码" required>
+        </label>
+        <button id="loginSubmit" class="primary-button" type="submit">登录并继续</button>
+      </form>
+    </section>
+
+    <section id="waitingPanel" class="view waiting-view" hidden>
+      <h1>正在等待 Google 登录…</h1>
+      <p>尚未登录，完成账号选择后将自动继续。</p>
+      <div class="checking-line"><span class="pulse-dot"></span>正在检查登录结果</div>
+    </section>
+
+    <section id="oauthPanel" class="view waiting-view" hidden>
+      <h1>正在等待 Notion 授权…</h1>
+      <p>请在 Notion 页面中选择允许 ExportAI 使用的页面。</p>
+      <div class="checking-line"><span class="pulse-dot"></span>正在检查授权结果</div>
+    </section>
+
+    <section id="targetsPanel" class="view targets-view" hidden>
+      <div class="targets-heading">
+        <div>
+          <h1>选择保存位置</h1>
+          <p id="workspaceText"></p>
+        </div>
+        <button id="openSettingsButton" class="icon-button settings-button" type="button" aria-label="打开设置">⚙</button>
+      </div>
+      <div id="targetList" class="target-list" role="list"></div>
+      <p id="emptyTargets" class="empty-targets" hidden>没有找到可用页面，请先在 Notion 授权页面添加访问范围。</p>
+      <button id="addAccessButton" class="text-row-button" type="button"><span>＋</span>添加或更新页面权限</button>
+      <button id="disconnectButton" class="danger-link" type="button">断开 Notion</button>
+    </section>
+
+    <button id="cancelButton" class="cancel-button" type="button">取消</button>
+  </main>
+
+  <script src="../shared/namespace.js"></script>
+  <script src="../shared/constants.js"></script>
+  <script src="../shared/default-settings.js"></script>
+  <script src="../shared/extension-bridge.js"></script>
+  <script src="../shared/storage.js"></script>
+  <script src="./notion-connect.js"></script>
+</body>
+</html>

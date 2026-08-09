@@ -212,6 +212,8 @@
   let notionTargets = [];
   let notionTargetParentId = null;
   let notionTargetPath = [];
+  // 用于丢弃旧一轮启动请求的结果，避免登录或退出后状态被旧请求覆盖。
+  let popupLoadVersion = 0;
 
   function normalizeLanguage(value) {
     return String(value || "").toLowerCase() === "zh-cn" ? "zh-CN" : "en";
@@ -631,9 +633,41 @@
     return response?.ok ? response : { isMember: false };
   }
 
+  async function getCachedMembership() {
+    const stored = await storageGet(["exportai_membership"]);
+    const membership = stored.exportai_membership;
+    return membership && typeof membership === "object" ? membership : { isMember: false };
+  }
+
   async function getNotionQuotaStatus() {
     const response = await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_QUOTA_STATUS });
     return response?.ok ? response : null;
+  }
+
+  async function refreshAccountStateInBackground(loadVersion) {
+    const refreshedMembership = await getMembership(true).catch(() => ({ isMember: false }));
+    if (loadVersion !== popupLoadVersion) return;
+
+    currentMembership = refreshedMembership;
+    currentNotionQuota = currentMembership?.isMember
+      ? { unlimited: true, isMember: true, remaining: null }
+      : await getNotionQuotaStatus().catch(() => null);
+    if (loadVersion !== popupLoadVersion) return;
+
+    const refreshedAuth = await getAuthState();
+    if (!refreshedAuth.token) {
+      accountText.textContent = t("notSignedIn");
+      currentMembership = { isMember: false };
+      currentNotionQuota = null;
+      setStatus(t("sessionExpired"), "error");
+    }
+
+    renderFormatOptions(currentSettings);
+    notionButton.disabled = !hasPaidFeatureAccess();
+    notionButton.title = !hasPaidFeatureAccess()
+      ? t("paidFormatUnavailable")
+      : (!currentSettings?.notionTarget?.id ? t("notionSetupHint") : "");
+    refreshNotionButtonLabel();
   }
 
   function formatPlanLabel(value) {
@@ -750,6 +784,7 @@
   }
 
   async function loadPopup() {
+    const loadVersion = ++popupLoadVersion;
     exportPanel.hidden = true;
     summaryNode.hidden = true;
     loginPanel.hidden = true;
@@ -772,17 +807,8 @@
       currentNotionQuota = null;
     } else {
       accountText.textContent = auth.user?.email || t("signedIn");
-      currentMembership = await getMembership(true).catch(() => ({ isMember: false }));
-      currentNotionQuota = currentMembership?.isMember
-        ? { unlimited: true, isMember: true, remaining: null }
-        : await getNotionQuotaStatus().catch(() => null);
-      const refreshedAuth = await getAuthState();
-      if (!refreshedAuth.token) {
-        accountText.textContent = t("notSignedIn");
-        currentMembership = { isMember: false };
-        currentNotionQuota = null;
-        sessionExpired = true;
-      }
+      currentMembership = await getCachedMembership();
+      currentNotionQuota = null;
     }
     renderFormatOptions(currentSettings);
     notionButton.disabled = !hasPaidFeatureAccess();
@@ -793,6 +819,7 @@
       await enterInlineNotionFlow();
       return;
     }
+
     summaryProviderNode.textContent = t("checking");
     summaryChatNameNode.textContent = t("checking");
     summaryNode.hidden = false;
@@ -800,6 +827,10 @@
     exportButton.disabled = true;
     setButtonLabel(exportButton, t("checking"));
     refreshSettingsInBackground();
+
+    if (auth.token) {
+      void refreshAccountStateInBackground(loadVersion);
+    }
 
     const tab = await queryActiveTab();
     if (!tab || typeof tab.id !== "number") {

@@ -1,4 +1,4 @@
-# Chrome Web Store reviewer notes — ExportAI 2.0.11
+# Chrome Web Store reviewer notes — ExportAI 2.0.12
 
 ## Reviewer account
 

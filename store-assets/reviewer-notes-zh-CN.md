@@ -1,4 +1,4 @@
-# Chrome 应用商店审核说明 — ExportAI 2.0.11
+# Chrome 应用商店审核说明 — ExportAI 2.0.12
 
 ## 审核账号
 

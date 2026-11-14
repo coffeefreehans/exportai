@@ -15,16 +15,8 @@
         </div>
         <div>
           <h1 data-i18n="title">ExportAI Settings</h1>
-          <p id="status" data-i18n="initialStatus">Local settings will load first, then sync to your account.</p>
+          <p id="status" data-i18n="initialStatus">Settings are stored locally.</p>
         </div>
-      </div>
-      <div class="account-chip" aria-label="Account">
-        <div>
-          <strong id="accountEmail">Not signed in</strong>
-          <span id="accountPlan">Free account</span>
-        </div>
-        <button id="loginButton" class="ghost-button subscription-button" type="button" data-i18n="subscriptionButton">Subscription</button>
-        <button id="logoutButton" class="ghost-button danger-button" type="button" data-i18n="logoutButton">Logout</button>
       </div>
     </header>
 
@@ -79,7 +71,7 @@
         <label class="field"><span data-i18n="conflictAction">Conflict action</span><select id="autosaveConflictAction" name="autosaveConflictAction"><option value="overwrite" data-i18n="overwrite">Overwrite</option><option value="uniquify" data-i18n="keepBoth">Keep both</option></select></label>
         </section>
 
-        <section class="settings-panel card paid-card" id="panel-integration" role="tabpanel" aria-labelledby="tab-integration" data-panel="integration" hidden>
+        <section class="settings-panel card" id="panel-integration" role="tabpanel" aria-labelledby="tab-integration" data-panel="integration" hidden>
           <h2><span data-i18n="integrationTitle">Integration</span></h2>
         <div class="notion-card">
           <div class="notion-card__header">

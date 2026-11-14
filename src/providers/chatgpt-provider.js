@@ -16,7 +16,21 @@
   const TIME_TEXT_REGEX = /\b\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM|A\.M\.|P\.M\.)?\b/i;
   const CONVERSATION_PATH_REGEX = /\/c\/([^/?#]+)/i;
   const PROJECT_PATH_REGEX = /(\/g\/[^/]+)\/c\/[^/?#]+/i;
-  const TURN_SECTION_SELECTOR = "section[data-testid^='conversation-turn-']";
+  // Supports standard turn sections, article turns, or elements containing author roles / markdown
+  // Supports conversation turns with testid, standard turn containers, or chat articles
+  const TURN_SECTION_SELECTOR = [
+    "[data-testid^='conversation-turn-']",
+    "[data-message-author-role]",
+    "article",
+    ".agent-turn",
+    "[class*='agent-turn']",
+    ".group\\/conversation-turn",
+    "[data-markdown-text-style='assistant-message']",
+    "[data-testid='user-message']",
+    ".user-message-bubble-color",
+    ".markdown",
+    ".prose"
+  ].join(", ");
 
   function hostnameFromUrl(url) {
     try {
@@ -31,9 +45,14 @@
   }
 
   function isChatPage() {
-    return Boolean(
-      document.querySelector('[data-message-author-role="user"], [data-message-author-role="assistant"], [data-testid^="conversation-turn-"]')
-    );
+    if (document.querySelector('[data-message-author-role="user"], [data-message-author-role="assistant"], [data-testid^="conversation-turn-"], article [data-message-id], article.text-message, .agent-turn, .markdown')) {
+      return true;
+    }
+    // Check if the current URL is explicitly a conversation URL (/c/... or /g/.../c/...)
+    if (CONVERSATION_PATH_REGEX.test(location.pathname) || PROJECT_PATH_REGEX.test(location.pathname)) {
+      return Boolean(document.querySelector('main, #__next, body'));
+    }
+    return false;
   }
 
   function normalizeRole(rawRole) {
@@ -120,28 +139,52 @@
     const normalizedRole = normalizeRole(rawRole);
 
     if (normalizedRole === "assistant") {
-      const agentTurn = messageNode.querySelector(".agent-turn");
-      if (agentTurn) {
-        return agentTurn;
+      if (typeof messageNode.matches === "function" && messageNode.matches(".markdown, .prose, [data-markdown-text-style='assistant-message']")) {
+        return messageNode;
       }
 
-      const markdown = messageNode.querySelector(".markdown");
+      const markdown = messageNode.querySelector("[data-markdown-text-style='assistant-message'], .markdown, .prose");
       if (markdown) {
         return markdown;
+      }
+
+      const textMessage = messageNode.querySelector(".text-message");
+      if (textMessage) {
+        const innerMarkdown = textMessage.querySelector(".markdown, .prose, [data-markdown-text-style='assistant-message']");
+        if (innerMarkdown) {
+          return innerMarkdown;
+        }
+        return textMessage;
+      }
+
+      const agentTurn = messageNode.querySelector(".agent-turn");
+      if (agentTurn) {
+        const innerMarkdown = agentTurn.querySelector(".markdown, .prose, [data-markdown-text-style='assistant-message']");
+        if (innerMarkdown) {
+          return innerMarkdown;
+        }
+        return agentTurn;
       }
 
       const imageContainer = messageNode.querySelector(".group\\/imagegen-image, [id^='image-']");
       if (imageContainer) {
         return imageContainer;
       }
+
+      const whitespaceBubble = messageNode.querySelector(".whitespace-pre-wrap");
+      if (whitespaceBubble) {
+        return whitespaceBubble;
+      }
     }
 
     if (normalizedRole === "user") {
-      const userBubbles = Array.from(messageNode.querySelectorAll(".whitespace-pre-wrap"));
+      if (typeof messageNode.matches === "function" && messageNode.matches(".user-message-bubble-color, [data-testid='user-message'], .whitespace-pre-wrap")) {
+        return messageNode;
+      }
+
+      const userBubbles = Array.from(messageNode.querySelectorAll(".user-message-bubble-color, [data-testid='user-message'], .whitespace-pre-wrap"));
       if (userBubbles.length > 1) {
         const bubbleGroup = (messageNode.ownerDocument || document).createElement("div");
-        // Keep grouped ChatGPT user bubbles as one clean content root instead
-        // of exporting only the first continuation bubble.
         userBubbles.forEach((bubble) => {
           bubbleGroup.appendChild(bubble.cloneNode(true));
         });
@@ -162,7 +205,7 @@
       return false;
     }
 
-    if (typeof node.matches === "function" && node.matches("[data-message-author-role='user']")) {
+    if (typeof node.matches === "function" && node.matches("[data-message-author-role='user'], .user-message-bubble-color, [data-testid='user-message'], .whitespace-pre-wrap")) {
       return true;
     }
 
@@ -189,26 +232,80 @@
     return Number(fallback || 0);
   }
 
-  function inferRoleFromTurnSection(section) {
+  function inferRoleFromTurnSection(section, fallbackIndex = null) {
     if (!section) {
       return "";
     }
 
-    if (section.querySelector("[data-message-author-role='user'], .user-message-bubble-color")) {
+    // 1. Direct author role on section itself
+    const directRole = section.getAttribute?.("data-message-author-role")
+      || section.getAttribute?.("data-turn")
+      || section.getAttribute?.("data-role");
+    if (directRole) {
+      return normalizeRole(directRole);
+    }
+
+    // 2. Child author role inside section
+    const childAuthorRole = section.querySelector?.("[data-message-author-role]")?.getAttribute("data-message-author-role");
+    if (childAuthorRole) {
+      return normalizeRole(childAuthorRole);
+    }
+
+    const hasMatch = (sel) => {
+      try {
+        if (typeof section.matches === "function" && section.matches(sel)) {
+          return true;
+        }
+      } catch (_e) {}
+      try {
+        return Boolean(section.querySelector?.(sel));
+      } catch (_e) {
+        return false;
+      }
+    };
+
+    // 3. User markers (Highest priority: user bubble, user testid, user edit button)
+    if (hasMatch("[data-message-author-role='user'], .user-message-bubble-color, [data-testid='user-message'], [class*='user-message'], button[aria-label*='Edit' i], button[aria-label*='编辑' i]")) {
       return "user";
     }
 
-    if (section.querySelector("[data-message-author-role='assistant'], .agent-turn, .markdown")) {
+    // 4. Accessibility screen reader labels inside this section
+    const srOnlyNode = section.querySelector?.("h1.sr-only, h2.sr-only, h3.sr-only, h4.sr-only, h5.sr-only, h6.sr-only, [class*='sr-only']");
+    const srOnlyHeading = normalizeText(srOnlyNode?.textContent);
+    if (srOnlyHeading) {
+      if (/(?:you said|你|用户|user|you|vous|sie|あなた|dijiste)/i.test(srOnlyHeading)) {
+        return "user";
+      }
+      if (/(?:chatgpt|assistant|gpt|bot|openai|回答)/i.test(srOnlyHeading)) {
+        return "assistant";
+      }
+    }
+
+    // 5. Assistant markers inside this section (markdown, prose, agent-turn, copy/audio buttons)
+    if (
+      hasMatch("[data-message-author-role='assistant'], [data-markdown-text-style='assistant-message'], [data-message-model-slug], .agent-turn, [class*='agent-turn'], .markdown, .prose")
+      || hasMatch("button[data-testid*='copy' i], button[data-testid*='turn-action' i], button[data-testid*='thumb' i], button[aria-label*='Read aloud' i], button[aria-label*='朗读' i], button[aria-label*='Good response' i], button[aria-label*='Bad response' i], button[aria-label*='Copy' i], button[aria-label*='复制' i], [data-testid*='thumbs' i]")
+    ) {
       return "assistant";
     }
 
-    const srOnlyHeading = normalizeText(section.querySelector("h4.sr-only")?.textContent);
-    if (/^(?:you said|t[úu]\s+dijiste)\b/i.test(srOnlyHeading)) {
+    // 6. Aria-labels on section
+    const ariaLabel = String(section.getAttribute?.("aria-label") || "");
+    if (/you|user|用户/i.test(ariaLabel)) {
+      return "user";
+    }
+    if (/chatgpt|assistant|gpt|bot/i.test(ariaLabel)) {
+      return "assistant";
+    }
+
+    // 7. If it only has whitespace-pre-wrap and no assistant controls
+    if (hasMatch(".whitespace-pre-wrap")) {
       return "user";
     }
 
-    if (/\b(?:chatgpt|assistant)\b/i.test(srOnlyHeading)) {
-      return "assistant";
+    // 8. Fallback to alternating pattern if fallbackIndex is available
+    if (fallbackIndex !== null && typeof fallbackIndex === "number") {
+      return fallbackIndex % 2 === 0 ? "user" : "assistant";
     }
 
     return "";
@@ -219,7 +316,12 @@
       return false;
     }
 
-    return Boolean(
+    if (section.getAttribute("data-message-author-role") || section.getAttribute("data-message-id")) {
+      return true;
+    }
+
+    const hasText = normalizeText(section.textContent).length > 0;
+    const hasQueryMatch = Boolean(
       section.querySelector(
         [
           "[data-message-author-role]",
@@ -233,11 +335,17 @@
           "[data-message-model-slug]",
           "[data-turn-start-message]",
           "[data-turn-message-id]",
+          "[data-testid*='message']",
+          "p",
+          "pre",
+          "code",
           "img",
           "video"
         ].join(", ")
       )
     );
+
+    return hasQueryMatch || hasText;
   }
 
   function getEntryWeight(entryNode) {
@@ -290,7 +398,7 @@
     const fingerprint = normalizeText(entry?.contentFingerprint);
     const turnId = normalizeText(entry?.turnId);
     if (turnId) {
-      if (isSyntheticEntryId(turnId) && fingerprint) {
+      if (fingerprint) {
         return `${turnId}::${roleKey}::${fingerprint}`;
       }
       return `${turnId}::${roleKey}`;
@@ -298,7 +406,7 @@
 
     const messageId = normalizeText(entry?.messageId);
     if (messageId) {
-      if (isSyntheticEntryId(messageId) && fingerprint) {
+      if (fingerprint) {
         return `${messageId}::${roleKey}::${fingerprint}`;
       }
       return `${messageId}::${roleKey}`;
@@ -327,9 +435,10 @@
   ) {
     const rawRole = normalizeRole(
       rawRoleOverride
+      || section.getAttribute("data-message-author-role")
       || section.getAttribute("data-turn")
       || section.querySelector("[data-message-author-role]")?.getAttribute("data-message-author-role")
-      || inferRoleFromTurnSection(section)
+      || inferRoleFromTurnSection(section, fallbackIndex)
       || "unknown"
     );
 
@@ -347,7 +456,6 @@
       || section;
     const dataTestId = normalizeText(section.getAttribute("data-testid"));
     const explicitTurnId = section.getAttribute("data-turn-id")
-      || section.closest("[data-turn-id-container]")?.getAttribute("data-turn-id-container")
       || section.getAttribute("data-turn-start-message")
       || section.querySelector("[data-turn-start-message]")?.getAttribute("data-turn-start-message")
       || "";
@@ -355,6 +463,8 @@
       || section.getAttribute("data-message-id")
       || section.getAttribute("data-turn-message-id")
       || section.querySelector("[data-turn-message-id]")?.getAttribute("data-turn-message-id")
+      || section.getAttribute("data-chatgpt-selection-message-id")
+      || section.querySelector("[data-chatgpt-selection-message-id]")?.getAttribute("data-chatgpt-selection-message-id")
       || "";
     const baseFallbackId = (messageNodeOverride && explicitMessageId)
       || explicitMessageId
@@ -365,10 +475,11 @@
     const turnId = normalizeText(
       splitCount > 1
         ? `${baseFallbackId}${splitSuffix}`
-        : ((messageNodeOverride && explicitMessageId) || explicitTurnId || explicitMessageId || dataTestId || `chatgpt-turn-${fallbackIndex + 1}`)
+        : ((messageNodeOverride && explicitMessageId) || explicitMessageId || explicitTurnId || dataTestId || `chatgpt-turn-${fallbackIndex + 1}`)
     );
     const messageId = normalizeText(
       (splitCount > 1 ? `${explicitMessageId || baseFallbackId}${splitSuffix}` : explicitMessageId)
+      || explicitMessageId
       || explicitTurnId
       || dataTestId
       || turnId
@@ -383,17 +494,25 @@
       dataTestId: splitSuffix ? `${dataTestId}${splitSuffix}` : dataTestId,
       order: parseTurnOrder(section, fallbackIndex + 1) + (splitCount > 1 ? splitIndex / 1000 : 0),
       weight: getEntryWeight(clonedNode),
-      contentFingerprint: fingerprintEntryNode(clonedNode)
+      contentFingerprint: fingerprintEntryNode(clonedNode),
+      _sourceNode: messageNodeOverride || section
     };
   }
 
   function isSectionOwnedRoleNode(node, section) {
-    if (!node || node.closest(TURN_SECTION_SELECTOR) !== section) {
+    if (!node) {
       return false;
     }
-
+    // If node itself is the section, it is owned by itself
+    if (node === section) {
+      return true;
+    }
+    // Check if section contains node
+    if (!section.contains(node)) {
+      return false;
+    }
     const parentRoleNode = node.parentElement?.closest?.("[data-message-author-role]");
-    return !parentRoleNode || parentRoleNode.closest(TURN_SECTION_SELECTOR) !== section;
+    return !parentRoleNode || !section.contains(parentRoleNode);
   }
 
   function collectOwnedRoleMessageNodes(section) {
@@ -451,10 +570,7 @@
 
   function readEntriesFromTurnSection(section, fallbackIndex) {
     const splitRoleEntries = collectSplitRoleEntries(section);
-    const userEntryCount = splitRoleEntries.filter((entry) => entry.rawRole === "user").length;
-    const shouldSplitConcreteRoleNodes = Boolean(userEntryCount);
-
-    if (shouldSplitConcreteRoleNodes) {
+    if (splitRoleEntries.length > 0) {
       return splitRoleEntries
         .map((entry, splitIndex) => readEntryFromTurnSection(
           section,
@@ -519,23 +635,55 @@
               dataTestId: normalizeText(node.getAttribute("data-testid")),
               order: Number.MAX_SAFE_INTEGER - 2000 + index + (splitIndex / 1000),
               weight: getEntryWeight(entry.node),
-              contentFingerprint: fingerprintEntryNode(entry.node)
+              contentFingerprint: fingerprintEntryNode(entry.node),
+              _sourceNode: node
             };
           });
       });
   }
 
+  function collectExplicitAssistantEntriesOutsideTurnSections() {
+    return Array.from(document.querySelectorAll("[data-message-author-role='assistant'], [data-markdown-text-style='assistant-message'], .agent-turn, main .markdown, main .prose"))
+      .filter((node) => !node.closest(TURN_SECTION_SELECTOR))
+      .map((node, index) => {
+        const clonedNode = node.cloneNode(true);
+        const dataTestId = normalizeText(node.getAttribute("data-testid"));
+        const explicitMessageId = normalizeText(node.getAttribute("data-message-id"));
+        return {
+          node: clonedNode,
+          rawRole: "assistant",
+          turnId: explicitMessageId || dataTestId || `chatgpt-outside-assistant-${index + 1}`,
+          messageId: explicitMessageId || dataTestId || `chatgpt-outside-assistant-${index + 1}`,
+          dataTestId,
+          order: Number.MAX_SAFE_INTEGER - 1500 + index,
+          weight: getEntryWeight(clonedNode),
+          contentFingerprint: fingerprintEntryNode(clonedNode),
+          _sourceNode: node
+        };
+      });
+  }
+
   function collectVisibleConversationEntries() {
     const entries = [];
-    const turnSections = Array.from(
+    const allMatchingNodes = Array.from(
       document.querySelectorAll(TURN_SECTION_SELECTOR)
     );
+    // Filter to top-level sections so nested selectors don't duplicate or shadow
+    const turnSections = allMatchingNodes.filter((node) => {
+      let parent = node.parentElement;
+      while (parent) {
+        if (allMatchingNodes.includes(parent)) {
+          return false;
+        }
+        parent = parent.parentElement;
+      }
+      return true;
+    });
 
-    // First pass: collect concrete user nodes directly. This guards against
-    // ChatGPT DOM variants where consecutive user turns are present in the page
-    // but the surrounding turn container is empty, mixed, or later deduped.
+    // Collect concrete user and assistant nodes directly.
     entries.push(...collectExplicitUserEntriesFromTurnSections(turnSections));
     entries.push(...collectExplicitUserEntriesOutsideTurnSections());
+    entries.push(...collectExplicitAssistantEntriesOutsideTurnSections());
 
     for (let index = 0; index < turnSections.length; index += 1) {
       const section = turnSections[index];
@@ -544,6 +692,25 @@
       }
 
       entries.push(...readEntriesFromTurnSection(section, index));
+    }
+
+    // Safety fallback: if no entries were collected, query any message-bearing elements in main
+    if (!entries.length) {
+      const fallbackNodes = Array.from(document.querySelectorAll("main [data-message-author-role], main article, [data-message-author-role]"));
+      fallbackNodes.forEach((node, idx) => {
+        const role = normalizeRole(node.getAttribute("data-message-author-role") || inferRoleFromTurnSection(node) || (idx % 2 === 0 ? "user" : "assistant"));
+        const clonedNode = node.cloneNode(true);
+        entries.push({
+          node: clonedNode,
+          rawRole: role,
+          turnId: `chatgpt-fallback-${idx + 1}`,
+          messageId: `chatgpt-fallback-${idx + 1}`,
+          dataTestId: `chatgpt-fallback-${idx + 1}`,
+          order: idx + 1,
+          weight: getEntryWeight(clonedNode),
+          contentFingerprint: fingerprintEntryNode(clonedNode)
+        });
+      });
     }
 
     const legacyNodes = Array.from(document.querySelectorAll("[data-message-author-role]"));
@@ -742,11 +909,11 @@
 
   async function runRequestedHydrationCycle(scrollContainer, hydrationBudgetExceeded, onCollect, topReachThreshold = 2) {
     const sweepStepPx = 1700;
-    const stepWaitMs = 500;
-    const postSweepWaitMs = 2000;
-    const postTopWaitMs = 2000;
-    const retryTopWaitMs = 1000;
-    const retryBottomWaitMs = 1000;
+    const stepWaitMs = 250;
+    const postSweepWaitMs = 400;
+    const postTopWaitMs = 400;
+    const retryTopWaitMs = 300;
+    const retryBottomWaitMs = 300;
     const bottomReachThreshold = 2;
     const horizontal = scrollLeftOf(scrollContainer);
     const maxSweepIterations = 1600;
@@ -786,27 +953,26 @@
     await waitForRender(postTopWaitMs);
     onCollect();
 
-    // 5) If not at top yet, keep forcing top every 1 second.
-    while (!hydrationBudgetExceeded() && scrollTopOf(scrollContainer) > topReachThreshold) {
+    // 5) If not at top yet, retry top up to 3 times.
+    let topRetries = 0;
+    while (!hydrationBudgetExceeded() && scrollTopOf(scrollContainer) > topReachThreshold && topRetries < 3) {
       setScrollPosition(scrollContainer, 0, horizontal);
       onCollect();
       await waitForRender(retryTopWaitMs);
       onCollect();
+      topRetries += 1;
     }
 
-    if (scrollTopOf(scrollContainer) > topReachThreshold) {
-      return false;
-    }
-
-    // 6) Move to bottom and keep forcing it every 1 second until it sticks.
+    // 6) Move to bottom and retry up to 3 times.
     setScrollPosition(scrollContainer, getBottomTop(), horizontal);
     onCollect();
     await waitForRender(retryBottomWaitMs);
     onCollect();
 
-    while (!hydrationBudgetExceeded()) {
+    let bottomRetries = 0;
+    while (!hydrationBudgetExceeded() && bottomRetries < 3) {
       const bottomTop = getBottomTop();
-      if (scrollTopOf(scrollContainer) >= bottomTop - bottomReachThreshold) {
+      if (scrollTopOf(scrollContainer) >= bottomTop - 20) {
         return true;
       }
 
@@ -814,6 +980,7 @@
       onCollect();
       await waitForRender(retryBottomWaitMs);
       onCollect();
+      bottomRetries += 1;
     }
 
     return false;
@@ -851,6 +1018,12 @@
       return visibleEntries;
     }
 
+    const maxScroll = Math.max(0, scrollHeightOf(scrollContainer) - clientHeightOf(scrollContainer));
+    if (maxScroll <= 40) {
+      // Chat is short and completely fits in viewport; no virtualization is active.
+      return visibleEntries;
+    }
+
     const collectedByTurn = new Map();
     const mergeEntries = (entries) => {
       for (const entry of entries) {
@@ -879,7 +1052,8 @@
       topReachThreshold
     );
     if (!reachedPositions) {
-      throw new Error("HYDRATION_TOP_REACH_FAILED: ChatGPT hydration did not finish top/bottom stabilization within timeout.");
+      // Log warning and fallback gracefully to visibleEntries instead of failing export
+      console.warn("ChatGPT hydration did not finish top/bottom stabilization within timeout, continuing with visible entries.");
     }
 
     const mergedEntries = Array.from(collectedByTurn.values()).sort((left, right) => left.order - right.order);
@@ -1333,6 +1507,9 @@
     // Ensure thought labels/blocks do not leak into assistant plain text output.
     removeStructuredThinkingFromAssistantRoot(clone);
 
+    // Remove screen-reader only labels (e.g. "ChatGPT said:", "ChatGPT 说：")
+    Array.from(clone.querySelectorAll(".sr-only, [class*='sr-only']")).forEach((node) => node.remove());
+
     // Remove assistant web links from message body when web references are disabled.
     stripAssistantWebLinksFromNode(clone, settings);
 
@@ -1784,68 +1961,274 @@
       }
       seenTurns.add(dedupeKey);
 
-      const timeData = extractMessageTimeData(node);
-      const timeLabel = timeData.label;
-      const timeMs = timeData.timestampMs;
-      const thinkingMessage = rawRole === "assistant"
-        ? extractThinkingMessage(node, settings, messageId, timeLabel, timeMs)
-        : null;
+      try {
+        const timeData = extractMessageTimeData(node);
+        const timeLabel = timeData.label;
+        const timeMs = timeData.timestampMs;
+        const thinkingMessage = rawRole === "assistant"
+          ? extractThinkingMessage(node, settings, messageId, timeLabel, timeMs)
+          : null;
 
-      if (thinkingMessage) {
-        messages.push(thinkingMessage);
-      }
+        if (thinkingMessage) {
+          messages.push(thinkingMessage);
+        }
 
-      const contentRoot = pickMessageContentRoot(node, rawRole);
-      const sanitizeRoot = rawRole === "assistant"
-        ? prepareAssistantContentRootForSanitize(contentRoot, settings)
-        : contentRoot;
-      let sanitized = root.sanitize.sanitizeMessageNode(sanitizeRoot, {
-        mediaHandling: settings.mediaHandling
-      });
-      let stripped = normalizeText((sanitized.safeHtml || "").replace(/<[^>]*>/g, " "));
-
-      // Some ChatGPT user turn variants render content outside the preferred
-      // bubble node. Retry sanitization from the whole turn before dropping it.
-      if (rawRole === "user" && !stripped && !sanitized.hasMedia) {
-        const fallbackSanitized = root.sanitize.sanitizeMessageNode(node, {
+        const contentRoot = pickMessageContentRoot(node, rawRole);
+        let sanitizeRoot = contentRoot;
+        if (rawRole === "assistant") {
+          sanitizeRoot = prepareAssistantContentRootForSanitize(contentRoot, settings);
+        } else if (rawRole === "user") {
+          const userClone = contentRoot?.cloneNode?.(true) || contentRoot;
+          Array.from(userClone.querySelectorAll?.(".sr-only, [class*='sr-only']") || []).forEach((n) => n.remove());
+          sanitizeRoot = userClone;
+        }
+        let sanitized = root.sanitize.sanitizeMessageNode(sanitizeRoot, {
           mediaHandling: settings.mediaHandling
         });
-        const fallbackStripped = normalizeText((fallbackSanitized.safeHtml || "").replace(/<[^>]*>/g, " "));
-        if (fallbackStripped || fallbackSanitized.hasMedia) {
-          sanitized = fallbackSanitized;
-          stripped = fallbackStripped;
+        let stripped = normalizeText((sanitized.safeHtml || "").replace(/<[^>]*>/g, " "));
+
+        // Always fallback to the whole node if contentRoot resulted in empty text
+        if (!stripped && !sanitized.hasMedia) {
+          const fallbackClone = node.cloneNode(true);
+          Array.from(fallbackClone.querySelectorAll(".sr-only, [class*='sr-only']")).forEach((n) => n.remove());
+          const fallbackSanitized = root.sanitize.sanitizeMessageNode(fallbackClone, {
+            mediaHandling: settings.mediaHandling
+          });
+          const fallbackStripped = normalizeText((fallbackSanitized.safeHtml || "").replace(/<[^>]*>/g, " "));
+          if (fallbackStripped || fallbackSanitized.hasMedia) {
+            sanitized = fallbackSanitized;
+            stripped = fallbackStripped;
+          }
+        }
+
+        // If still empty but node has textContent, convert plain text to safe HTML
+        if (!stripped && !sanitized.hasMedia) {
+          const fallbackClone = node.cloneNode(true);
+          Array.from(fallbackClone.querySelectorAll(".sr-only, [class*='sr-only']")).forEach((n) => n.remove());
+          const rawNodeText = normalizeText(fallbackClone.textContent);
+          if (rawNodeText) {
+            sanitized = {
+              safeHtml: `<p>${root.sanitize.escapeHtml(rawNodeText)}</p>`,
+              hasMedia: false
+            };
+            stripped = rawNodeText;
+          }
+        }
+
+        const detectedUserAttachments = rawRole === "user"
+          ? extractUserAttachmentReferences(node)
+          : [];
+        const userAttachments = rawRole === "user" && settings.showUserAttachmentNames
+          ? detectedUserAttachments
+          : [];
+        const assistantReferences = rawRole === "assistant" && shouldExtractAssistantReferences
+          ? dedupeReferences([
+              ...extractAssistantReferences(node, contentRoot),
+              ...extractAssistantButtonReferences(node, contentRoot)
+            ])
+          : [];
+
+        const preserveEmptyUserTurn = rawRole === "user" && hasUserTurnStructure(node);
+        if (!stripped && !sanitized.hasMedia && !detectedUserAttachments.length && !assistantReferences.length && !preserveEmptyUserTurn) {
+          continue;
+        }
+
+        messages.push({
+          id: messageId,
+          role: mapRole(rawRole),
+          safeHtml: sanitized.safeHtml || (preserveEmptyUserTurn ? "<p></p>" : ""),
+          hasMedia: sanitized.hasMedia,
+          timeLabel,
+          timeMs,
+          attachments: userAttachments,
+          references: assistantReferences,
+          _sourceNode: entry._sourceNode || node
+        });
+      } catch (turnError) {
+        const text = normalizeText(node?.textContent);
+        if (text) {
+          messages.push({
+            id: messageId,
+            role: mapRole(rawRole) || ROLES.HUMAN,
+            safeHtml: `<p>${root.sanitize.escapeHtml(text)}</p>`,
+            hasMedia: false,
+            timeLabel: "",
+            timeMs: null,
+            attachments: [],
+            references: [],
+            _sourceNode: entry._sourceNode || node
+          });
+        }
+      }
+    }
+
+    // Emergency fallback: If messages is still empty, scan document directly for any text blocks
+    if (!messages.length) {
+      const emergencyNodes = Array.from(document.querySelectorAll("article, [data-message-author-role], main .markdown, main .whitespace-pre-wrap"));
+      emergencyNodes.forEach((node, idx) => {
+        const text = normalizeText(node.textContent);
+        if (text) {
+          const role = node.getAttribute("data-message-author-role") === "user" || node.matches(".whitespace-pre-wrap") ? ROLES.HUMAN : (idx % 2 === 0 ? ROLES.HUMAN : ROLES.ASSISTANT);
+          messages.push({
+            id: `chatgpt-emergency-${idx + 1}`,
+            role,
+            safeHtml: `<p>${root.sanitize.escapeHtml(text)}</p>`,
+            hasMedia: false,
+            timeLabel: "",
+            timeMs: null,
+            attachments: [],
+            references: [],
+            _sourceNode: node
+          });
+        }
+      });
+    }
+
+    // Safety check 1: If we have messages but zero human messages, recover visible user nodes!
+    const hasHuman = messages.some((msg) => msg.role === ROLES.HUMAN);
+    if (!hasHuman) {
+      const candidateUserNodes = Array.from(
+        document.querySelectorAll(
+          [
+            "[data-message-author-role='user']",
+            "[data-testid='user-message']",
+            ".user-message-bubble-color",
+            "[class*='user-message']",
+            "main .whitespace-pre-wrap",
+            ".whitespace-pre-wrap"
+          ].join(", ")
+        )
+      );
+
+      const userNodes = [];
+      for (const cand of candidateUserNodes) {
+        if (cand.closest("[data-message-author-role='assistant'], .agent-turn, .markdown, .prose")) {
+          continue;
+        }
+        if (cand.querySelector(".markdown, .prose, .agent-turn, button[aria-label*='Copy' i], button[aria-label*='复制' i]")) {
+          continue;
+        }
+        if (userNodes.some((existing) => existing.contains(cand) || cand.contains(existing))) {
+          continue;
+        }
+        const text = normalizeText(cand.textContent);
+        if (text) {
+          userNodes.push(cand);
         }
       }
 
-      const detectedUserAttachments = rawRole === "user"
-        ? extractUserAttachmentReferences(node)
-        : [];
-      const userAttachments = rawRole === "user" && settings.showUserAttachmentNames
-        ? detectedUserAttachments
-        : [];
-      const assistantReferences = rawRole === "assistant" && shouldExtractAssistantReferences
-        ? dedupeReferences([
-            ...extractAssistantReferences(node, contentRoot),
-            ...extractAssistantButtonReferences(node, contentRoot)
-          ])
-        : [];
+      for (let i = 0; i < userNodes.length; i++) {
+        const uNode = userNodes[i];
+        const clone = uNode.cloneNode(true);
+        Array.from(clone.querySelectorAll(".sr-only, [class*='sr-only']")).forEach((n) => n.remove());
+        let sanitized = root.sanitize.sanitizeMessageNode(clone, {
+          mediaHandling: settings.mediaHandling
+        });
+        let stripped = normalizeText((sanitized.safeHtml || "").replace(/<[^>]*>/g, " "));
+        if (!stripped) {
+          const text = normalizeText(clone.textContent);
+          if (text) {
+            sanitized = { safeHtml: `<p>${root.sanitize.escapeHtml(text)}</p>`, hasMedia: false };
+            stripped = text;
+          }
+        }
+        if (stripped) {
+          messages.push({
+            id: `chatgpt-recovered-user-${i + 1}`,
+            role: ROLES.HUMAN,
+            safeHtml: sanitized.safeHtml,
+            hasMedia: Boolean(sanitized.hasMedia),
+            timeLabel: "",
+            timeMs: null,
+            attachments: [],
+            references: [],
+            _sourceNode: uNode
+          });
+        }
+      }
+    }
 
-      const preserveEmptyUserTurn = rawRole === "user" && hasUserTurnStructure(node);
-      if (!stripped && !sanitized.hasMedia && !detectedUserAttachments.length && !assistantReferences.length && !preserveEmptyUserTurn) {
-        continue;
+    // Safety check 2: If we have messages but zero assistant messages, check for visible assistant nodes
+    const hasAssistant = messages.some((msg) => msg.role === ROLES.ASSISTANT);
+    if (!hasAssistant) {
+      const candidateNodes = Array.from(
+        document.querySelectorAll(
+          [
+            "[data-message-author-role='assistant']",
+            "[data-markdown-text-style='assistant-message']",
+            ".agent-turn",
+            "[class*='agent-turn']",
+            "main .markdown",
+            "main .prose",
+            ".markdown",
+            ".prose"
+          ].join(", ")
+        )
+      );
+
+      const assistantNodes = [];
+      for (const cand of candidateNodes) {
+        if (cand.closest("[data-message-author-role='user'], .user-message-bubble-color, [data-testid='user-message']")) {
+          continue;
+        }
+        if (assistantNodes.some((existing) => existing.contains(cand) || cand.contains(existing))) {
+          continue;
+        }
+        const text = normalizeText(cand.textContent);
+        if (text) {
+          assistantNodes.push(cand);
+        }
       }
 
-      messages.push({
-        id: messageId,
-        role: mapRole(rawRole),
-        safeHtml: sanitized.safeHtml || (preserveEmptyUserTurn ? "<p></p>" : ""),
-        hasMedia: sanitized.hasMedia,
-        timeLabel,
-        timeMs,
-        attachments: userAttachments,
-        references: assistantReferences
-      });
+      for (let i = 0; i < assistantNodes.length; i++) {
+        const aNode = assistantNodes[i];
+        const contentRoot = pickMessageContentRoot(aNode, "assistant");
+        let sanitized = root.sanitize.sanitizeMessageNode(contentRoot, {
+          mediaHandling: settings.mediaHandling
+        });
+        let stripped = normalizeText((sanitized.safeHtml || "").replace(/<[^>]*>/g, " "));
+        if (!stripped) {
+          const text = normalizeText(aNode.textContent);
+          if (text) {
+            sanitized = { safeHtml: `<p>${root.sanitize.escapeHtml(text)}</p>`, hasMedia: false };
+            stripped = text;
+          }
+        }
+        if (stripped) {
+          messages.push({
+            id: `chatgpt-recovered-assistant-${i + 1}`,
+            role: ROLES.ASSISTANT,
+            safeHtml: sanitized.safeHtml,
+            hasMedia: Boolean(sanitized.hasMedia),
+            timeLabel: "",
+            timeMs: null,
+            attachments: [],
+            references: [],
+            _sourceNode: aNode
+          });
+        }
+      }
     }
+
+    // Sort all messages into proper document/chronological order
+    messages.sort((a, b) => {
+      const nodeA = a._sourceNode || rawEntries.find((e) => (e.messageId === a.id || e.turnId === a.id))?._sourceNode;
+      const nodeB = b._sourceNode || rawEntries.find((e) => (e.messageId === b.id || e.turnId === b.id))?._sourceNode;
+      if (nodeA && nodeB && nodeA !== nodeB && typeof nodeA.compareDocumentPosition === "function") {
+        try {
+          const isAttachedA = (nodeA.ownerDocument || document).contains(nodeA);
+          const isAttachedB = (nodeB.ownerDocument || document).contains(nodeB);
+          if (isAttachedA && isAttachedB) {
+            const pos = nodeA.compareDocumentPosition(nodeB);
+            if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+            if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+          }
+        } catch (_err) {
+          // ignore detached compare
+        }
+      }
+      return 0;
+    });
 
     return {
       providerId: "chatgpt",
@@ -1861,9 +2244,10 @@
   function getLiveStatus() {
     const roleCount = document.querySelectorAll("[data-message-author-role]").length;
     const turnCount = document.querySelectorAll(TURN_SECTION_SELECTOR).length;
+    const isChat = isChatPage();
     return {
-      isChatPage: isChatPage(),
-      messageCount: Math.max(roleCount, turnCount)
+      isChatPage: isChat,
+      messageCount: Math.max(roleCount, turnCount, isChat ? 1 : 0)
     };
   }
 

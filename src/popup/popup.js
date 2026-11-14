@@ -8,18 +8,13 @@
     MSG_NOTION_DISCONNECT,
     MSG_NOTION_TARGETS,
     MSG_NOTION_QUOTA_STATUS,
-    MSG_CHECK_MEMBERSHIP,
-    PAID_FEATURES_TEMPORARILY_UNLOCKED,
     EXPORT_FORMATS
   } = root.constants;
 
-  const WEB_URL = "https://exportai.nexscp.com";
   const FS_DIRECTORY_DB_NAME = "exportai-file-system-access";
   const FS_DIRECTORY_STORE_NAME = "handles";
   const FS_DIRECTORY_HANDLE_KEY = "lastDownloadDirectory";
   const NOTION_INLINE_FLOW_KEY = "exportai_notion_inline_flow";
-  const AUTH_LOGOUT_KEY = "exportai_auth_logout_at";
-  const AUTH_KEYS = ["exportai_access_token", "exportai_refresh_token", "exportai_user_info", "exportai_membership"];
   const FORMAT_OPTIONS = [
     [EXPORT_FORMATS.TXT, "TXT"],
     [EXPORT_FORMATS.PDF, "PDF"],
@@ -30,50 +25,17 @@
     [EXPORT_FORMATS.XLSX, "XLSX"],
     [EXPORT_FORMATS.PNG, "PNG"]
   ];
-  const FREE_EXPORT_FORMATS = new Set([EXPORT_FORMATS.TXT, EXPORT_FORMATS.PDF]);
   const POPUP_LANGUAGE_TEXT = {
     en: {
-      accountButton: "Account",
       settingsButton: "Settings",
-      loginTitle: "Sign in to ExportAI",
-      signInPrompt: "Sign in before exporting AI conversations.",
-      signIn: "Sign in",
-      emailLabel: "Email",
-      emailPlaceholder: "Enter your email",
-      passwordLabel: "Password",
-      passwordPlaceholder: "Enter your password",
-      forgotPassword: "Forgot password?",
-      orText: "or",
-      googleSignIn: "Continue with Google",
-      noAccount: "No account?",
-      registerNow: "Create one",
-      backButton: "Back",
-      accountTitle: "Account",
-      accountSubtitle: "Manage your ExportAI account here.",
-      membershipLabel: "Membership",
-      subscriptionButton: "Subscription",
-      logoutButton: "Log out",
-      loggingOut: "Logging out...",
-      freeAccount: "Free account",
-      paidMember: "Member",
-      monthlyMember: "Monthly member",
-      yearlyMember: "Yearly member",
-      lifetimeMember: "Lifetime member",
-      signingIn: "Signing in...",
-      loginFailed: "Sign-in failed. Please try again.",
-      googleLoginFailed: "Google sign-in was not completed.",
       platform: "Platform",
       filename: "Filename",
       chooseExportFormats: "Choose export formats",
       export: "Export",
-      notSignedIn: "Not signed in",
-      sessionExpired: "Your ExportAI login expired. Please sign in again.",
-      signedIn: "Signed in",
       checking: "Checking...",
       noActiveTab: "Unable to detect the current tab.",
       notExportableChat: "This tab does not contain an exportable AI chat.",
       selectAtLeastOne: "Please select at least one format.",
-      paidFormatUnavailable: "Free accounts can export TXT and PDF only. Upgrade to use other formats.",
       chooseDirectory: "Choose folder...",
       exporting: "Exporting...",
       exportFailed: "Export failed",
@@ -94,47 +56,15 @@
       popupError: "Popup error"
     },
     "zh-CN": {
-      accountButton: "\u8d26\u53f7",
       settingsButton: "\u8bbe\u7f6e",
-      loginTitle: "\u767b\u5f55 ExportAI",
-      signInPrompt: "\u767b\u5f55\u540e\u5373\u53ef\u5bfc\u51fa AI \u5bf9\u8bdd\u3002",
-      signIn: "\u767b\u5f55",
-      emailLabel: "\u90ae\u7bb1",
-      emailPlaceholder: "\u8bf7\u8f93\u5165\u90ae\u7bb1",
-      passwordLabel: "\u5bc6\u7801",
-      passwordPlaceholder: "\u8bf7\u8f93\u5165\u5bc6\u7801",
-      forgotPassword: "\u5fd8\u8bb0\u5bc6\u7801\uff1f",
-      orText: "\u6216",
-      googleSignIn: "\u4f7f\u7528 Google \u767b\u5f55",
-      noAccount: "\u8fd8\u6ca1\u6709\u8d26\u53f7\uff1f",
-      registerNow: "\u7acb\u5373\u6ce8\u518c",
-      backButton: "\u8fd4\u56de",
-      accountTitle: "\u8d26\u53f7",
-      accountSubtitle: "\u5728\u5f53\u524d\u5f39\u7a97\u7ba1\u7406 ExportAI \u8d26\u53f7\u3002",
-      membershipLabel: "\u4f1a\u5458",
-      subscriptionButton: "\u8ba2\u9605",
-      logoutButton: "\u9000\u51fa\u767b\u5f55",
-      loggingOut: "\u6b63\u5728\u9000\u51fa...",
-      freeAccount: "\u514d\u8d39\u8d26\u53f7",
-      paidMember: "\u4ed8\u8d39\u4f1a\u5458",
-      monthlyMember: "\u6708\u5ea6\u4f1a\u5458",
-      yearlyMember: "\u5e74\u5ea6\u4f1a\u5458",
-      lifetimeMember: "\u7ec8\u8eab\u4f1a\u5458",
-      signingIn: "\u6b63\u5728\u767b\u5f55...",
-      loginFailed: "\u767b\u5f55\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5\u3002",
-      googleLoginFailed: "Google \u767b\u5f55\u672a\u5b8c\u6210\u3002",
       platform: "\u5e73\u53f0",
       filename: "\u6587\u4ef6\u540d",
       chooseExportFormats: "\u9009\u62e9\u5bfc\u51fa\u683c\u5f0f",
       export: "\u5bfc\u51fa",
-      notSignedIn: "\u672a\u767b\u5f55",
-      sessionExpired: "ExportAI \u767b\u5f55\u5df2\u8fc7\u671f\uff0c\u8bf7\u91cd\u65b0\u767b\u5f55\u3002",
-      signedIn: "\u5df2\u767b\u5f55",
       checking: "\u68c0\u6d4b\u4e2d...",
       noActiveTab: "\u65e0\u6cd5\u68c0\u6d4b\u5f53\u524d\u6807\u7b7e\u9875\u3002",
       notExportableChat: "\u5f53\u524d\u6807\u7b7e\u9875\u4e0d\u662f\u53ef\u5bfc\u51fa\u7684 AI \u5bf9\u8bdd\u3002",
       selectAtLeastOne: "\u8bf7\u81f3\u5c11\u9009\u62e9\u4e00\u79cd\u683c\u5f0f\u3002",
-      paidFormatUnavailable: "\u514d\u8d39\u8d26\u53f7\u4ec5\u652f\u6301 TXT \u548c PDF \u5bfc\u51fa\uff0c\u5176\u4ed6\u683c\u5f0f\u9700\u8981\u4f1a\u5458\u3002",
       chooseDirectory: "\u9009\u62e9\u76ee\u5f55...",
       exporting: "\u5bfc\u51fa\u4e2d...",
       exportFailed: "\u5bfc\u51fa\u5931\u8d25",
@@ -157,18 +87,6 @@
   };
 
   const accountText = document.getElementById("accountText");
-  const loginPanel = document.getElementById("loginPanel");
-  const popupLoginForm = document.getElementById("popupLoginForm");
-  const popupLoginEmail = document.getElementById("popupLoginEmail");
-  const popupLoginPassword = document.getElementById("popupLoginPassword");
-  const popupLoginSubmit = document.getElementById("popupLoginSubmit");
-  const popupGoogleLogin = document.getElementById("popupGoogleLogin");
-  const popupLoginStatus = document.getElementById("popupLoginStatus");
-  const accountPanel = document.getElementById("accountPanel");
-  const popupAccountEmail = document.getElementById("popupAccountEmail");
-  const popupAccountPlan = document.getElementById("popupAccountPlan");
-  const popupLogoutButton = document.getElementById("popupLogoutButton");
-  const loginButton = document.getElementById("loginButton");
   const openOptionsButton = document.getElementById("openOptions");
   const statusNode = document.getElementById("status");
   const statusTextNode = document.getElementById("statusText");
@@ -184,13 +102,6 @@
   const notionLoginView = document.getElementById("notionLoginView");
   const notionWaitingView = document.getElementById("notionWaitingView");
   const notionTargetsView = document.getElementById("notionTargetsView");
-  const notionContinueAccount = document.getElementById("notionContinueAccount");
-  const notionGoogleLogin = document.getElementById("notionGoogleLogin");
-  const notionEmailToggle = document.getElementById("notionEmailToggle");
-  const notionEmailForm = document.getElementById("notionEmailForm");
-  const notionEmail = document.getElementById("notionEmail");
-  const notionPassword = document.getElementById("notionPassword");
-  const notionEmailSubmit = document.getElementById("notionEmailSubmit");
   const notionWaitingTitle = document.getElementById("notionWaitingTitle");
   const notionWaitingText = document.getElementById("notionWaitingText");
   const notionWorkspaceText = document.getElementById("notionWorkspaceText");
@@ -203,17 +114,13 @@
 
   let activeTabId = null;
   let currentSettings = null;
-  let currentMembership = { isMember: false };
   let currentNotionQuota = null;
   let exportInProgress = false;
   let lastNotionUrl = "";
   let notionFlowBusy = false;
-  let popupLoginBusy = false;
   let notionTargets = [];
   let notionTargetParentId = null;
   let notionTargetPath = [];
-  // 用于丢弃旧一轮启动请求的结果，避免登录或退出后状态被旧请求覆盖。
-  let popupLoadVersion = 0;
 
   function normalizeLanguage(value) {
     return String(value || "").toLowerCase() === "zh-cn" ? "zh-CN" : "en";
@@ -296,14 +203,6 @@
     });
   }
 
-  function storageSet(values) {
-    return new Promise((resolve) => globalThis.chrome.storage.local.set(values, resolve));
-  }
-
-  function storageRemove(keys) {
-    return new Promise((resolve) => globalThis.chrome.storage.local.remove(keys, resolve));
-  }
-
   function showNotionView(view, message = "", tone = "") {
     notionViews.forEach((item) => { item.hidden = item !== view; });
     notionFlowStatus.textContent = message;
@@ -316,18 +215,6 @@
     exportPanel.hidden = !visible;
     statusNode.hidden = !visible || !statusTextNode.textContent;
     notionFlow.hidden = visible;
-  }
-
-  async function showInlineNotionLogin(message = "") {
-    const auth = await storageGet(["exportai_access_token", "exportai_user_info"]);
-    const email = auth.exportai_user_info?.email || "";
-    notionContinueAccount.hidden = !(auth.exportai_access_token && email);
-    notionContinueAccount.textContent = email ? `继续使用 ${email}` : "继续当前账号";
-    showNotionView(notionLoginView, message, message ? "error" : "");
-  }
-
-  function isAccountAuthError(message) {
-    return /未授权|登录|login|sign in|expired|refresh token|unauthorized|401/i.test(String(message || ""));
   }
 
   function normalizeNotionTargets(targets) {
@@ -375,7 +262,7 @@
         await root.storage.saveSettings({ notionTarget });
         currentSettings = { ...(currentSettings || {}), notionTarget };
         renderNotionTargetLevel(notionTargetParentId, notionTargetPath);
-        showNotionView(notionTargetsView, `已选择“${notionTarget.title}”`, "success");
+        showNotionView(notionTargetsView, `已选择"${notionTarget.title}"`, "success");
         refreshNotionButtonLabel();
       } catch (error) {
         showNotionView(notionTargetsView, error?.message || "保存位置失败。", "error");
@@ -410,8 +297,7 @@
       storageGet(["exportai_notion_connection"])
     ]);
     if (!response?.ok) {
-      if (isAccountAuthError(response?.error)) await showInlineNotionLogin("ExportAI 登录已过期，请重新登录后继续。");
-      else showNotionView(notionTargetsView, response?.error || "无法读取 Notion 页面。", "error");
+      showNotionView(notionTargetsView, response?.error || "无法读取 Notion 页面。", "error");
       return;
     }
     notionWorkspaceText.textContent = workspaceName || stored.exportai_notion_connection?.workspaceName || "Notion 工作区";
@@ -430,63 +316,12 @@
     try {
       const response = await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_CONNECT });
       if (!response?.ok) {
-        if (isAccountAuthError(response?.error)) await showInlineNotionLogin("ExportAI 登录已过期，请重新登录后继续。");
-        else await showInlineNotionLogin(`Notion 连接失败：${response?.error || "请重试。"}`);
+        showNotionView(notionLoginView, `Notion 连接失败：${response?.error || "请重试。"}`, "error");
         return;
       }
       await loadInlineNotionTargets(response.workspaceName || "Notion 工作区");
     } finally {
       notionFlowBusy = false;
-    }
-  }
-
-  async function googleLoginInlineNotion() {
-    if (notionFlowBusy) return;
-    notionFlowBusy = true;
-    notionWaitingTitle.textContent = "正在等待 Google 登录…";
-    notionWaitingText.textContent = "登录完成后会自动继续";
-    showNotionView(notionWaitingView);
-    try {
-      const response = await root.chromeHelpers.runtimeSendMessage({
-        type: "EXPORTAI_ACCOUNT_GOOGLE_LOGIN",
-        payload: { connectNotion: true }
-      });
-      if (!response?.ok) {
-        await showInlineNotionLogin(response?.error || "Google 登录未完成，请重试。");
-        return;
-      }
-      await loadInlineNotionTargets(response.workspaceName || "Notion 工作区");
-    } finally {
-      notionFlowBusy = false;
-    }
-  }
-
-  async function emailLoginInlineNotion(event) {
-    event.preventDefault();
-    if (notionFlowBusy) return;
-    notionFlowBusy = true;
-    notionEmailSubmit.disabled = true;
-    notionWaitingTitle.textContent = "正在登录并连接 Notion…";
-    notionWaitingText.textContent = "完成后会自动显示保存位置";
-    showNotionView(notionWaitingView);
-    try {
-      const response = await root.chromeHelpers.runtimeSendMessage({
-        type: "EXPORTAI_ACCOUNT_LOGIN",
-        payload: {
-          email: notionEmail.value.trim(),
-          password: notionPassword.value,
-          connectNotion: true
-        }
-      });
-      notionPassword.value = "";
-      if (!response?.ok) {
-        await showInlineNotionLogin(response?.error || "登录失败，请重试。");
-        return;
-      }
-      await loadInlineNotionTargets(response.workspaceName || "Notion 工作区");
-    } finally {
-      notionFlowBusy = false;
-      notionEmailSubmit.disabled = false;
     }
   }
 
@@ -498,7 +333,7 @@
       await loadInlineNotionTargets(stored.exportai_notion_connection.workspaceName || "Notion 工作区");
       return;
     }
-    await showInlineNotionLogin();
+    showNotionView(notionLoginView);
   }
 
   function leaveInlineNotionFlow() {
@@ -546,211 +381,19 @@
     await saveDirectoryHandle(directoryHandle);
   }
 
-  async function getAuthState() {
-    const stored = await storageGet(["exportai_access_token", "exportai_user_info"]);
-    const token = stored.exportai_access_token || "";
-    let user = null;
-    try {
-      user = typeof stored.exportai_user_info === "string"
-        ? JSON.parse(stored.exportai_user_info)
-        : stored.exportai_user_info;
-    } catch (_error) {
-      user = null;
-    }
-    return { token, user };
-  }
-
-  function setPopupLoginStatus(message = "", tone = "") {
-    popupLoginStatus.textContent = String(message || "");
-    popupLoginStatus.classList.toggle("is-success", tone === "success");
-  }
-
-  function setPopupLoginBusy(busy) {
-    popupLoginBusy = busy;
-    popupLoginSubmit.disabled = busy;
-    popupGoogleLogin.disabled = busy;
-    popupLoginEmail.disabled = busy;
-    popupLoginPassword.disabled = busy;
-    setButtonLabel(popupLoginSubmit, busy ? t("signingIn") : t("signIn"));
-  }
-
-  async function runPopupEmailLogin(event) {
-    event.preventDefault();
-    if (popupLoginBusy) return;
-    setPopupLoginBusy(true);
-    setPopupLoginStatus(t("signingIn"));
-    try {
-      const response = await root.chromeHelpers.runtimeSendMessage({
-        type: "EXPORTAI_ACCOUNT_LOGIN",
-        payload: {
-          email: popupLoginEmail.value.trim(),
-          password: popupLoginPassword.value
-        }
-      });
-      popupLoginPassword.value = "";
-      if (!response?.ok) {
-        setPopupLoginStatus(response?.error || t("loginFailed"));
-        return;
-      }
-      setPopupLoginStatus("");
-      await loadPopup();
-    } catch (error) {
-      setPopupLoginStatus(error?.message || t("loginFailed"));
-    } finally {
-      setPopupLoginBusy(false);
-    }
-  }
-
-  async function runPopupGoogleLogin() {
-    if (popupLoginBusy) return;
-    setPopupLoginBusy(true);
-    setPopupLoginStatus(t("signingIn"));
-    try {
-      const response = await root.chromeHelpers.runtimeSendMessage({ type: "EXPORTAI_ACCOUNT_GOOGLE_LOGIN" });
-      if (!response?.ok) {
-        setPopupLoginStatus(response?.error || t("googleLoginFailed"));
-        return;
-      }
-      setPopupLoginStatus("");
-      await loadPopup();
-    } catch (error) {
-      setPopupLoginStatus(error?.message || t("googleLoginFailed"));
-    } finally {
-      setPopupLoginBusy(false);
-    }
-  }
-
-  async function queryActiveTab() {
-    const tabs = await root.chromeHelpers.tabsQuery({ active: true, currentWindow: true });
-    return tabs[0] || null;
-  }
-
-  async function getMembership(forceRefresh = false) {
-    const response = await root.chromeHelpers.runtimeSendMessage({
-      type: MSG_CHECK_MEMBERSHIP,
-      payload: { forceRefresh }
-    });
-    return response?.ok ? response : { isMember: false };
-  }
-
-  async function getCachedMembership() {
-    const stored = await storageGet(["exportai_membership"]);
-    const membership = stored.exportai_membership;
-    return membership && typeof membership === "object" ? membership : { isMember: false };
-  }
-
-  async function getNotionQuotaStatus() {
-    const response = await root.chromeHelpers.runtimeSendMessage({ type: MSG_NOTION_QUOTA_STATUS });
-    return response?.ok ? response : null;
-  }
-
-  async function refreshAccountStateInBackground(loadVersion) {
-    const refreshedMembership = await getMembership(true).catch(() => ({ isMember: false }));
-    if (loadVersion !== popupLoadVersion) return;
-
-    currentMembership = refreshedMembership;
-    currentNotionQuota = currentMembership?.isMember
-      ? { unlimited: true, isMember: true, remaining: null }
-      : await getNotionQuotaStatus().catch(() => null);
-    if (loadVersion !== popupLoadVersion) return;
-
-    const refreshedAuth = await getAuthState();
-    if (!refreshedAuth.token) {
-      accountText.textContent = t("notSignedIn");
-      currentMembership = { isMember: false };
-      currentNotionQuota = null;
-      setStatus(t("sessionExpired"), "error");
-    }
-
-    renderFormatOptions(currentSettings);
-    notionButton.disabled = !hasPaidFeatureAccess();
-    notionButton.title = !hasPaidFeatureAccess()
-      ? t("paidFormatUnavailable")
-      : (!currentSettings?.notionTarget?.id ? t("notionSetupHint") : "");
-    refreshNotionButtonLabel();
-  }
-
-  function formatPlanLabel(value) {
-    const planType = String(value || "").toUpperCase();
-    if (planType === "LIFETIME") return t("lifetimeMember");
-    if (planType === "YEARLY") return t("yearlyMember");
-    if (planType === "MONTHLY") return t("monthlyMember");
-    return t("paidMember");
-  }
-
-  async function showInlineAccount() {
-    const auth = await getAuthState();
-    if (!auth.token) {
-      accountPanel.hidden = true;
-      loginPanel.hidden = false;
-      summaryNode.hidden = true;
-      exportPanel.hidden = true;
-      statusNode.hidden = true;
-      notionFlow.hidden = true;
-      popupLoginEmail.focus();
-      return;
-    }
-
-    loginPanel.hidden = true;
-    accountPanel.hidden = false;
-    summaryNode.hidden = true;
-    exportPanel.hidden = true;
-    statusNode.hidden = true;
-    notionFlow.hidden = true;
-    popupAccountEmail.textContent = auth.user?.email || t("signedIn");
-    popupAccountPlan.textContent = t("checking");
-    currentMembership = await getMembership(true).catch(() => currentMembership || { isMember: false });
-    const refreshedAuth = await getAuthState();
-    if (!refreshedAuth.token) {
-      accountPanel.hidden = true;
-      loginPanel.hidden = false;
-      popupLoginEmail.focus();
-      return;
-    }
-    popupAccountEmail.textContent = refreshedAuth.user?.email || t("signedIn");
-    popupAccountPlan.textContent = currentMembership?.isMember
-      ? formatPlanLabel(currentMembership.planType)
-      : t("freeAccount");
-  }
-
-  async function logoutInlineAccount() {
-    popupLogoutButton.disabled = true;
-    popupLogoutButton.textContent = t("loggingOut");
-    await storageSet({ [AUTH_LOGOUT_KEY]: new Date().toISOString() });
-    await storageRemove(AUTH_KEYS);
-    currentMembership = { isMember: false };
-    popupLogoutButton.disabled = false;
-    popupLogoutButton.textContent = t("logoutButton");
-    accountPanel.hidden = true;
-    await loadPopup();
-  }
-
-  function isFormatAllowedForMembership(format) {
-    return Boolean(PAID_FEATURES_TEMPORARILY_UNLOCKED || currentMembership?.isMember) || FREE_EXPORT_FORMATS.has(format);
-  }
-
-  function hasPaidFeatureAccess() {
-    return Boolean(PAID_FEATURES_TEMPORARILY_UNLOCKED || currentMembership?.isMember);
+  function renderFormatOptions(settings) {
+    const selected = new Set(normalizePopupSelectedFormats(settings.popupSelectedFormats));
+    formatOptionsNode.innerHTML = FORMAT_OPTIONS.map(([format, label]) => {
+      const checked = selected.has(format) ? " checked" : "";
+      return `<label class="format-option"><input type="checkbox" value="${format}"${checked}><span>${label}</span></label>`;
+    }).join("");
   }
 
   function normalizePopupSelectedFormats(formats) {
     const selected = Array.isArray(formats) && formats.length
       ? formats
       : [EXPORT_FORMATS.TXT, EXPORT_FORMATS.PDF];
-    const allowed = selected.filter((format) => isFormatAllowedForMembership(format));
-    return allowed.length ? allowed : [EXPORT_FORMATS.TXT];
-  }
-
-  function renderFormatOptions(settings) {
-    const selected = new Set(normalizePopupSelectedFormats(settings.popupSelectedFormats));
-    formatOptionsNode.innerHTML = FORMAT_OPTIONS.map(([format, label]) => {
-      const locked = !isFormatAllowedForMembership(format);
-      const checked = !locked && selected.has(format) ? " checked" : "";
-      const paidOnlyAttr = locked ? ' data-paid-only="true"' : "";
-      const lockedClass = locked ? " is-locked" : "";
-      const lockMarkup = locked ? '<span class="lock-mark" aria-hidden="true">🔒</span>' : "";
-      return `<label class="format-option${lockedClass}"${paidOnlyAttr} title="${locked ? t("paidFormatUnavailable") : ""}"><input type="checkbox" value="${format}"${checked}><span>${label}</span>${lockMarkup}</label>`;
-    }).join("");
+    return selected;
   }
 
   function selectedFormats() {
@@ -759,7 +402,7 @@
   }
 
   async function saveSelectedFormats() {
-    const formats = selectedFormats().filter((format) => isFormatAllowedForMembership(format));
+    const formats = selectedFormats();
     if (!formats.length) {
       return;
     }
@@ -783,37 +426,24 @@
       .catch(() => null);
   }
 
+  async function queryActiveTab() {
+    const tabs = await root.chromeHelpers.tabsQuery({ active: true, currentWindow: true });
+    return tabs[0] || null;
+  }
+
   async function loadPopup() {
-    const loadVersion = ++popupLoadVersion;
     exportPanel.hidden = true;
     summaryNode.hidden = true;
-    loginPanel.hidden = true;
-    accountPanel.hidden = true;
     setStatus("");
-    let sessionExpired = false;
 
-    const authPromise = getAuthState();
     currentSettings = typeof root.storage.getCachedSettings === "function"
       ? await root.storage.getCachedSettings()
       : await root.storage.getSettings();
     root.appTheme.applyThemeDocument(currentSettings.appTheme);
     applyLanguage();
     renderFormatOptions(currentSettings);
-
-    const auth = await authPromise;
-    if (!auth.token) {
-      accountText.textContent = t("notSignedIn");
-      currentMembership = { isMember: false };
-      currentNotionQuota = null;
-    } else {
-      accountText.textContent = auth.user?.email || t("signedIn");
-      currentMembership = await getCachedMembership();
-      currentNotionQuota = null;
-    }
-    renderFormatOptions(currentSettings);
-    notionButton.disabled = !hasPaidFeatureAccess();
-    notionButton.title = !hasPaidFeatureAccess() ? t("paidFormatUnavailable") : (!currentSettings?.notionTarget?.id ? t("notionSetupHint") : "");
     refreshNotionButtonLabel();
+
     const inlineFlowState = await storageGet([NOTION_INLINE_FLOW_KEY]);
     if (inlineFlowState[NOTION_INLINE_FLOW_KEY]) {
       await enterInlineNotionFlow();
@@ -828,13 +458,9 @@
     setButtonLabel(exportButton, t("checking"));
     refreshSettingsInBackground();
 
-    if (auth.token) {
-      void refreshAccountStateInBackground(loadVersion);
-    }
-
     const tab = await queryActiveTab();
     if (!tab || typeof tab.id !== "number") {
-      setStatus(sessionExpired ? t("sessionExpired") : t("noActiveTab"), sessionExpired ? "error" : "");
+      setStatus(t("noActiveTab"));
       activeTabId = null;
       exportButton.disabled = true;
       setButtonLabel(exportButton, t("export"));
@@ -844,7 +470,7 @@
     activeTabId = tab.id;
     const response = await root.chromeHelpers.tabsSendMessage(activeTabId, { type: MSG_GET_CHAT_STATUS });
     if (!response || !response.supported || !response.isChatPage || !response.messageCount) {
-      setStatus(sessionExpired ? t("sessionExpired") : t("notExportableChat"), sessionExpired ? "error" : "");
+      setStatus(t("notExportableChat"));
       activeTabId = null;
       summaryProviderNode.textContent = "-";
       summaryChatNameNode.textContent = "-";
@@ -854,15 +480,15 @@
     }
 
     summaryProviderNode.textContent = response.summary?.providerName || response.providerName || "-";
-    summaryChatNameNode.textContent = response.summary?.fileName || response.summary?.fileNameBase || "-";
+    summaryChatNameNode.textContent = response.summary?.fileNameBase || response.summary?.fileName || "-";
     summaryNode.hidden = false;
     exportPanel.hidden = false;
     exportButton.disabled = false;
-    notionButton.disabled = !hasPaidFeatureAccess();
-    notionButton.title = !hasPaidFeatureAccess() ? t("paidFormatUnavailable") : (!currentSettings?.notionTarget?.id ? t("notionSetupHint") : "");
+    notionButton.disabled = false;
+    notionButton.title = !currentSettings?.notionTarget?.id ? t("notionSetupHint") : "";
     refreshNotionButtonLabel();
     setButtonLabel(exportButton, t("export"));
-    setStatus(sessionExpired ? t("sessionExpired") : "", sessionExpired ? "error" : "");
+    setStatus("");
   }
 
   async function runExport() {
@@ -873,12 +499,6 @@
       const formats = selectedFormats();
       if (!formats.length) {
         setStatus(t("selectAtLeastOne"));
-        return;
-      }
-      const disallowed = formats.filter((format) => !isFormatAllowedForMembership(format));
-      if (disallowed.length) {
-        setStatus(t("paidFormatUnavailable"));
-        renderFormatOptions(currentSettings || {});
         return;
       }
 
@@ -917,16 +537,6 @@
     }
   }
 
-  popupLoginForm.addEventListener("submit", runPopupEmailLogin);
-  popupGoogleLogin.addEventListener("click", runPopupGoogleLogin);
-  document.getElementById("popupRegisterLink").addEventListener("click", () => openUrl(`${WEB_URL}/register?return=/account&extension_callback=1`));
-  document.getElementById("popupForgotPassword").addEventListener("click", () => openUrl(`${WEB_URL}/forgot-password`));
-  loginButton.addEventListener("click", async () => {
-    await showInlineAccount();
-  });
-  document.getElementById("accountBackButton").addEventListener("click", loadPopup);
-  document.getElementById("popupSubscriptionButton").addEventListener("click", () => openUrl(`${WEB_URL}/?extension_callback=1#pricing`));
-  popupLogoutButton.addEventListener("click", logoutInlineAccount);
   openOptionsButton.addEventListener("click", () => {
     if (globalThis.chrome?.runtime?.openOptionsPage) {
       globalThis.chrome.runtime.openOptionsPage();
@@ -934,23 +544,7 @@
     }
     openUrl(globalThis.chrome.runtime.getURL("src/options/options.html"));
   });
-  formatOptionsNode.addEventListener("click", (event) => {
-    const option = event.target?.closest?.(".format-option");
-    if (!option || !option.dataset.paidOnly) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-    openUrl(`${WEB_URL}/#pricing`);
-  });
-  formatOptionsNode.addEventListener("change", (event) => {
-    const option = event.target?.closest?.(".format-option");
-    if (option?.dataset.paidOnly) {
-      const input = option.querySelector("input");
-      if (input) input.checked = false;
-      return;
-    }
+  formatOptionsNode.addEventListener("change", () => {
     saveSelectedFormats();
   });
   exportButton.addEventListener("click", runExport);
@@ -986,14 +580,6 @@
     const nextParentId = nextPath.length ? nextPath[nextPath.length - 1].id : null;
     renderNotionTargetLevel(nextParentId, nextPath);
   });
-  notionContinueAccount.addEventListener("click", connectInlineNotion);
-  notionGoogleLogin.addEventListener("click", googleLoginInlineNotion);
-  notionEmailToggle.addEventListener("click", () => {
-    notionEmailForm.hidden = !notionEmailForm.hidden;
-    notionEmailToggle.textContent = notionEmailForm.hidden ? "使用邮箱登录" : "收起邮箱登录";
-    if (!notionEmailForm.hidden) notionEmail.focus();
-  });
-  notionEmailForm.addEventListener("submit", emailLoginInlineNotion);
   document.getElementById("notionManageAccess").addEventListener("click", connectInlineNotion);
   document.getElementById("notionDisconnect").addEventListener("click", async () => {
     if (notionFlowBusy) return;
@@ -1002,7 +588,7 @@
     await root.storage.saveSettings({ notionTarget: null }).catch(() => null);
     currentSettings = { ...(currentSettings || {}), notionTarget: null };
     notionFlowBusy = false;
-    await showInlineNotionLogin("Notion 已断开连接。");
+    showNotionView(notionLoginView, "Notion 已断开连接。");
   });
   statusActionNode.addEventListener("click", () => { if (lastNotionUrl) openUrl(lastNotionUrl); });
 

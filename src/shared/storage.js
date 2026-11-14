@@ -461,51 +461,6 @@
 
   async function getSettings() {
     const localState = await loadSettingsState();
-
-    if (MSG_GET_ACCOUNT_SETTINGS && root.chromeHelpers?.runtimeSendMessage) {
-      const storedSyncState = await storageGet([SETTINGS_PENDING_SYNC_STORAGE_KEY]);
-      if (storedSyncState[SETTINGS_PENDING_SYNC_STORAGE_KEY] && localState.manualKeys.length) {
-        const localSettings = resolveSettingsFromManualValues(localState.manualValues);
-        try {
-          const syncResponse = await root.chromeHelpers.runtimeSendMessage({
-            type: MSG_SAVE_ACCOUNT_SETTINGS,
-            payload: { settings: localSettings }
-          });
-          if (syncResponse?.ok) {
-            await storageSet({ [SETTINGS_PENDING_SYNC_STORAGE_KEY]: false });
-          }
-        } catch (_error) {
-          // Keep local pending settings visible and retry on a later open/save.
-        }
-        return localSettings;
-      }
-
-      const response = await root.chromeHelpers.runtimeSendMessage({
-        type: MSG_GET_ACCOUNT_SETTINGS
-      });
-      if (response?.ok && response.settings && typeof response.settings === "object") {
-        const remoteHasSettings = Object.keys(response.settings).length > 0;
-        if (!remoteHasSettings && localState.manualKeys.length) {
-          const localSettings = resolveSettingsFromManualValues(localState.manualValues);
-          try {
-            const bootstrapResponse = await root.chromeHelpers.runtimeSendMessage({
-              type: MSG_SAVE_ACCOUNT_SETTINGS,
-              payload: { settings: localSettings }
-            });
-            await storageSet({ [SETTINGS_PENDING_SYNC_STORAGE_KEY]: !bootstrapResponse?.ok });
-          } catch (_error) {
-            await storageSet({ [SETTINGS_PENDING_SYNC_STORAGE_KEY]: true });
-          }
-          return localSettings;
-        }
-
-        const merged = root.defaults.mergeSettings(response.settings);
-        const derived = buildManualOverridesFromSource(merged);
-        await saveSettingsState(derived.manualValues, derived.manualKeys);
-        return merged;
-      }
-    }
-
     return resolveSettingsFromManualValues(localState.manualValues);
   }
 
@@ -575,25 +530,7 @@
 
     await saveSettingsState(nextManualValues, nextManualKeys);
 
-    if (MSG_SAVE_ACCOUNT_SETTINGS && root.chromeHelpers?.runtimeSendMessage) {
-      await storageSet({ [SETTINGS_PENDING_SYNC_STORAGE_KEY]: true });
-      try {
-        const response = await root.chromeHelpers.runtimeSendMessage({
-          type: MSG_SAVE_ACCOUNT_SETTINGS,
-          payload: { settings: merged }
-        });
-
-        if (!response?.ok) {
-          throw new Error(response?.error || "Account settings sync failed.");
-        }
-
-        await storageSet({ [SETTINGS_PENDING_SYNC_STORAGE_KEY]: false });
-      } catch (error) {
-        const syncError = error instanceof Error ? error : new Error("Account settings sync failed.");
-        syncError.localSettings = merged;
-        throw syncError;
-      }
-    }
+    // Standalone mode: no account sync needed
 
     return merged;
   }

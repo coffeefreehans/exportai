@@ -19,69 +19,11 @@
         </div>
       </div>
       <div class="header-actions">
-        <button id="loginButton" class="icon-button" type="button" aria-label="Account" title="Account" data-i18n-aria-label="accountButton" data-i18n-title="accountButton">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z"/></svg>
-        </button>
         <button id="openOptions" class="icon-button" type="button" aria-label="Settings" title="Settings" data-i18n-aria-label="settingsButton" data-i18n-title="settingsButton">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94c.05-.3.08-.62.08-.94s-.03-.64-.08-.94l2.06-1.69c.19-.15.25-.41.14-.63l-1.85-3.48c-.11-.21-.36-.31-.59-.24l-2.42.88c-.47-.34-.98-.63-1.55-.85l-.43-2.52c-.03-.23-.23-.39-.47-.39H9.97c-.24 0-.44.16-.47.39l-.43 2.52c-.57.22-1.08.51-1.55.85l-2.42-.88c-.23-.07-.48.03-.59.24L2.66 8.74c-.11.21-.05.47.14.63l2.06 1.69c-.05.3-.08.62-.08.94s.03.64.08.94L2.8 14.63c-.19.15-.25.41-.14.63l1.85 3.48c.11.21.36.31.59.24l2.42-.88c.47.34.98.63 1.55.85l.43 2.52c.03.23.23.39.47.39h4.06c.24 0 .44-.16.47-.39l.43-2.52c.57-.22 1.08-.51 1.55-.85l2.42.88c.23.07.48-.03.59-.24l1.85-3.48c.11-.21.05-.47-.14-.63l-2.06-1.69ZM12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5Z"/></svg>
         </button>
       </div>
     </header>
-
-    <section id="loginPanel" class="panel popup-login-panel" hidden>
-      <div class="popup-login-heading">
-        <span class="popup-login-mark" aria-hidden="true">E</span>
-        <div>
-          <h2 data-i18n="loginTitle">Sign in to ExportAI</h2>
-          <p data-i18n="signInPrompt">Sign in before exporting AI conversations.</p>
-        </div>
-      </div>
-
-      <form id="popupLoginForm" class="popup-login-form">
-        <label for="popupLoginEmail" data-i18n="emailLabel">Email</label>
-        <input id="popupLoginEmail" type="email" autocomplete="email" required data-i18n-placeholder="emailPlaceholder" placeholder="Enter your email">
-        <div class="popup-password-label">
-          <label for="popupLoginPassword" data-i18n="passwordLabel">Password</label>
-          <button id="popupForgotPassword" class="popup-auth-link" type="button" data-i18n="forgotPassword">Forgot password?</button>
-        </div>
-        <input id="popupLoginPassword" type="password" autocomplete="current-password" required data-i18n-placeholder="passwordPlaceholder" placeholder="Enter your password">
-        <button id="popupLoginSubmit" class="primary-button" type="submit" data-i18n="signIn">Sign in</button>
-      </form>
-
-      <div class="popup-login-divider"><span data-i18n="orText">or</span></div>
-      <button id="popupGoogleLogin" class="popup-google-button" type="button"><span aria-hidden="true">G</span><span data-i18n="googleSignIn">Continue with Google</span></button>
-      <p id="popupLoginStatus" class="popup-login-status" role="status" aria-live="polite"></p>
-      <p class="popup-register-row"><span data-i18n="noAccount">No account?</span> <button id="popupRegisterLink" class="popup-auth-link" type="button" data-i18n="registerNow">Create one</button></p>
-    </section>
-
-    <section id="accountPanel" class="panel popup-account-panel" hidden>
-      <div class="popup-account-heading">
-        <button id="accountBackButton" class="account-back-button" type="button" aria-label="Back" title="Back" data-i18n-aria-label="backButton" data-i18n-title="backButton">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.7 5.3-1.4-1.4L5.2 12l8.1 8.1 1.4-1.4L9 13h10v-2H9l5.7-5.7Z"/></svg>
-        </button>
-        <div class="popup-account-avatar" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5Z"/></svg>
-        </div>
-        <div>
-          <h2 data-i18n="accountTitle">Account</h2>
-          <p data-i18n="accountSubtitle">Manage your ExportAI account here.</p>
-        </div>
-      </div>
-
-      <div class="popup-account-details">
-        <div class="popup-account-row">
-          <span data-i18n="emailLabel">Email</span>
-          <strong id="popupAccountEmail">-</strong>
-        </div>
-        <div class="popup-account-row">
-          <span data-i18n="membershipLabel">Membership</span>
-          <strong id="popupAccountPlan" class="popup-plan-badge">-</strong>
-        </div>
-      </div>
-
-      <button id="popupSubscriptionButton" class="primary-button popup-subscription-button" type="button" data-i18n="subscriptionButton">Subscription</button>
-      <button id="popupLogoutButton" class="popup-logout-button" type="button" data-i18n="logoutButton">Log out</button>
-    </section>
 
     <div id="status" class="status" role="status" aria-live="polite" hidden>
       <span id="statusText"></span>
@@ -111,23 +53,15 @@
         <div class="service-link" aria-hidden="true">
           <span class="service-logo exportai-logo">E</span><span class="service-arrows">⇄</span><span class="service-logo notion-logo">N</span>
         </div>
-        <p id="notionLoginHint" class="notion-flow-hint">选择 ExportAI 登录方式后连接 Notion</p>
-        <button id="notionContinueAccount" class="notion-choice-button is-primary" type="button" hidden></button>
-        <button id="notionGoogleLogin" class="notion-choice-button" type="button"><span class="google-g" aria-hidden="true">G</span>使用 Google 登录</button>
-        <button id="notionEmailToggle" class="notion-email-toggle" type="button">使用邮箱登录</button>
-        <form id="notionEmailForm" class="notion-email-form" hidden>
-          <label>邮箱<input id="notionEmail" type="email" autocomplete="email" required></label>
-          <label>密码<input id="notionPassword" type="password" autocomplete="current-password" required></label>
-          <button id="notionEmailSubmit" class="notion-choice-button is-primary" type="submit">登录并连接 Notion</button>
-        </form>
+        <p id="notionLoginHint" class="notion-flow-hint">连接 Notion</p>
       </div>
 
       <div id="notionWaitingView" class="notion-view notion-waiting-view" hidden>
         <div class="service-link" aria-hidden="true">
-          <span class="service-logo exportai-logo">E</span><span class="service-arrows">⇄</span><span class="service-logo google-logo">G</span>
+          <span class="service-logo exportai-logo">E</span><span class="service-arrows">⇄</span><span class="service-logo notion-logo">N</span>
         </div>
-        <strong id="notionWaitingTitle">正在等待 Google 登录…</strong>
-        <p id="notionWaitingText">登录完成后会自动继续</p>
+        <strong id="notionWaitingTitle">正在等待 Notion 授权…</strong>
+        <p id="notionWaitingText">授权完成后会自动返回这里</p>
       </div>
 
       <div id="notionTargetsView" class="notion-view" hidden>

@@ -108,10 +108,15 @@
       .filter(Boolean)
       .filter((segment) => segment !== "." && segment !== "..")
       .map((segment) => {
-        return segment
+        let clean = segment
           .replace(/[<>:"|?*\u0000-\u001F]/g, " ")
           .replace(/\s+/g, " ")
+          .replace(/[. ]+$/g, "")
           .trim();
+        if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(clean)) {
+          clean = `_${clean}`;
+        }
+        return clean;
       })
       .filter(Boolean);
 
@@ -126,11 +131,105 @@
     return value === "uniquify" ? "uniquify" : "overwrite";
   }
 
+  const pendingDownloads = [];
+  const pendingDownloadsById = new Map();
+
+  function trackPendingDownload(url, filename, saveAs, conflictAction) {
+    const normalized = normalizeDownloadFilename(filename);
+    const target = {
+      id: null,
+      url: String(url || ""),
+      urlPrefix: String(url || "").slice(0, 300),
+      filename: normalized,
+      saveAs: Boolean(saveAs),
+      conflictAction: normalizeConflictAction(conflictAction),
+      createdAt: Date.now()
+    };
+    pendingDownloads.push(target);
+
+    // Keep pending queue fresh and bounded
+    const now = Date.now();
+    while (
+      pendingDownloads.length > 30 ||
+      (pendingDownloads.length > 0 && now - pendingDownloads[0].createdAt > 120000)
+    ) {
+      pendingDownloads.shift();
+    }
+
+    return target;
+  }
+
+  function matchPendingDownload(item) {
+    if (!item) return null;
+
+    // 1. Match by download ID if available
+    if (item.id && pendingDownloadsById.has(item.id)) {
+      const match = pendingDownloadsById.get(item.id);
+      pendingDownloadsById.delete(item.id);
+      const queueIndex = pendingDownloads.indexOf(match);
+      if (queueIndex !== -1) {
+        pendingDownloads.splice(queueIndex, 1);
+      }
+      return match;
+    }
+
+    const itemUrl = String(item.url || "");
+    const itemPrefix = itemUrl.slice(0, 300);
+
+    // 2. Match by URL exact or prefix match
+    for (let i = 0; i < pendingDownloads.length; i++) {
+      const entry = pendingDownloads[i];
+      if (
+        (entry.url && itemUrl && entry.url === itemUrl) ||
+        (entry.urlPrefix && itemPrefix && (entry.urlPrefix === itemPrefix || itemUrl.startsWith(entry.urlPrefix)))
+      ) {
+        pendingDownloads.splice(i, 1);
+        return entry;
+      }
+    }
+
+    // 3. Fallback: match by extension ID if triggered by this extension
+    if (item.byExtensionId === chrome.runtime.id && pendingDownloads.length > 0) {
+      return pendingDownloads.shift();
+    }
+
+    return null;
+  }
+
+  if (chrome.downloads?.onDeterminingFilename?.addListener) {
+    chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
+      let suggested = false;
+      try {
+        const target = matchPendingDownload(item);
+        if (target && target.filename) {
+          const finalFilename = target.saveAs && target.filename.includes("/")
+            ? target.filename.split("/").pop()
+            : target.filename;
+
+          suggested = true;
+          suggest({
+            filename: finalFilename,
+            conflictAction: target.conflictAction || "overwrite"
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn("ExportAI onDeterminingFilename error:", err);
+      } finally {
+        if (!suggested) {
+          suggest();
+        }
+      }
+    });
+  }
+
   function downloadByUrl(url, filename, saveAs = false, conflictAction = "overwrite") {
     return new Promise((resolve, reject) => {
+      const normalizedName = normalizeDownloadFilename(filename);
+      const target = trackPendingDownload(url, normalizedName, saveAs, conflictAction);
       const downloadOptions = {
         url,
-        filename: normalizeDownloadFilename(filename),
+        filename: normalizedName,
         saveAs: Boolean(saveAs)
       };
 
@@ -142,8 +241,35 @@
         const error = chrome.runtime.lastError;
 
         if (error) {
+          // If downloading with subdirectories failed in chrome.downloads.download directly
+          // (e.g. data URL with slashes validation in some Chrome versions),
+          // fallback to bare filename, BUT onDeterminingFilename will still intercept and route into the folder!
+          if (normalizedName.includes("/")) {
+            const fallbackOptions = {
+              ...downloadOptions,
+              filename: normalizedName.split("/").pop()
+            };
+            chrome.downloads.download(fallbackOptions, (fallbackId) => {
+              const fallbackError = chrome.runtime.lastError;
+              if (fallbackError) {
+                reject(new Error(fallbackError.message));
+              } else {
+                if (fallbackId) {
+                  target.id = fallbackId;
+                  pendingDownloadsById.set(fallbackId, target);
+                }
+                resolve({ ok: true, downloadId: fallbackId });
+              }
+            });
+            return;
+          }
           reject(new Error(error.message));
           return;
+        }
+
+        if (downloadId) {
+          target.id = downloadId;
+          pendingDownloadsById.set(downloadId, target);
         }
 
         resolve({
@@ -294,8 +420,7 @@
   }
 
   async function getNotionQuotaStatus() {
-    const body = await apiRequest("/api/notion/quota", { method: "GET" });
-    return { ok: true, ...(body?.data || {}) };
+    return { ok: true, unlimited: true, isMember: true, remaining: null };
   }
 
   async function createNotionPage(payload = {}) {
@@ -304,31 +429,15 @@
     const requestId = String(payload.requestId || "");
     const stored = await storageGet([`exportai_notion_export_${requestId}`]);
     if (requestId && stored[`exportai_notion_export_${requestId}`]?.url) return { ok: true, duplicate: true, ...stored[`exportai_notion_export_${requestId}`] };
-    const quotaRequestId = requestId || crypto.randomUUID();
-    const quotaBody = await apiRequest("/api/notion/quota/reserve", {
-      method: "POST",
-      body: JSON.stringify({ requestId: quotaRequestId })
-    });
-    const quota = quotaBody?.data || {};
     const titleProperty = target.type === "data_source" ? String(target.titleProperty || "Name") : "title";
-    try {
-      const page = await notionRequest("/pages", { method: "POST", body: JSON.stringify({ parent, properties: { [titleProperty]: { type: "title", title: [{ type: "text", text: { content: String(payload.title || "AI conversation").slice(0, 2000) } }] } }, children: (payload.blocks || []).slice(0, 100) }) });
-      const remaining = (payload.blocks || []).slice(100);
-      for (let index = 0; index < remaining.length; index += 100) {
-        await notionRequest(`/blocks/${page.id}/children`, { method: "PATCH", body: JSON.stringify({ children: remaining.slice(index, index + 100) }) });
-      }
-      const result = { pageId: page.id, url: page.url };
-      if (requestId) await storageSet({ [`exportai_notion_export_${requestId}`]: result });
-      return { ok: true, quota, ...result };
-    } catch (error) {
-      if (quota.counted && !quota.duplicate) {
-        await apiRequest("/api/notion/quota/release", {
-          method: "POST",
-          body: JSON.stringify({ requestId: quotaRequestId })
-        }).catch(() => null);
-      }
-      throw error;
+    const page = await notionRequest("/pages", { method: "POST", body: JSON.stringify({ parent, properties: { [titleProperty]: { type: "title", title: [{ type: "text", text: { content: String(payload.title || "AI conversation").slice(0, 2000) } }] } }, children: (payload.blocks || []).slice(0, 100) }) });
+    const remaining = (payload.blocks || []).slice(100);
+    for (let index = 0; index < remaining.length; index += 100) {
+      await notionRequest(`/blocks/${page.id}/children`, { method: "PATCH", body: JSON.stringify({ children: remaining.slice(index, index + 100) }) });
     }
+    const result = { pageId: page.id, url: page.url };
+    if (requestId) await storageSet({ [`exportai_notion_export_${requestId}`]: result });
+    return { ok: true, quota: { unlimited: true, isMember: true }, ...result };
   }
 
   function delay(ms) {
@@ -690,94 +799,31 @@
   }
 
   async function refreshMembershipStatus() {
-    const token = await getAccessToken();
-    if (!token) {
-      const stored = await storageGet([MEMBERSHIP_STORAGE_KEY]);
-      const cached = stored[MEMBERSHIP_STORAGE_KEY];
-      if (cached && typeof cached === "object" && cached.isMember) {
-        const preserved = {
-          ...cached,
-          checkedAt: cached.checkedAt || new Date().toISOString(),
-          stale: true,
-          error: "No access token available; using cached membership."
-        };
-        await storageSet({ [MEMBERSHIP_STORAGE_KEY]: preserved });
-        return preserved;
-      }
-
-      const anonymous = {
-        isMember: false,
-        planType: null,
-        expiresAt: null,
-        checkedAt: new Date().toISOString()
-      };
-      await storageSet({ [MEMBERSHIP_STORAGE_KEY]: anonymous });
-      return anonymous;
-    }
-
-    try {
-      const result = await apiRequest("/api/membership", { method: "GET" });
-      const data = result?.data || {};
-      const membership = {
-        isMember: Boolean(data.isMember),
-        planType: data.planType || null,
-        expiresAt: data.expiresAt || null,
-        checkedAt: new Date().toISOString()
-      };
-      await storageSet({ [MEMBERSHIP_STORAGE_KEY]: membership });
-      return membership;
-    } catch (error) {
-      const stored = await storageGet([MEMBERSHIP_STORAGE_KEY]);
-      const cached = stored[MEMBERSHIP_STORAGE_KEY];
-      if (cached && typeof cached === "object") {
-        const preserved = {
-          ...cached,
-          checkedAt: cached.checkedAt || new Date().toISOString(),
-          stale: true,
-          error: error?.message || "Membership refresh failed."
-        };
-        await storageSet({ [MEMBERSHIP_STORAGE_KEY]: preserved });
-        return preserved;
-      }
-
-      const fallback = {
-        isMember: false,
-        planType: null,
-        expiresAt: null,
-        checkedAt: new Date().toISOString(),
-        stale: true,
-        error: error?.message || "Membership refresh failed."
-      };
-      await storageSet({ [MEMBERSHIP_STORAGE_KEY]: fallback });
-      return fallback;
-    }
+    const standaloneMembership = {
+      isMember: true,
+      planType: "LIFETIME",
+      expiresAt: null,
+      checkedAt: new Date().toISOString()
+    };
+    await storageSet({ [MEMBERSHIP_STORAGE_KEY]: standaloneMembership });
+    return standaloneMembership;
   }
 
-  async function getMembershipStatus(forceRefresh = false) {
-    if (forceRefresh) {
-      return refreshMembershipStatus();
-    }
-
-    const stored = await storageGet([MEMBERSHIP_STORAGE_KEY]);
-    const cached = stored[MEMBERSHIP_STORAGE_KEY];
-    const checkedAtMs = cached?.checkedAt ? Date.parse(cached.checkedAt) : 0;
-    if (cached && Date.now() - checkedAtMs < 30 * 60 * 1000) {
-      return cached;
-    }
-    return refreshMembershipStatus();
+  async function getMembershipStatus() {
+    return {
+      isMember: true,
+      planType: "LIFETIME",
+      expiresAt: null,
+      checkedAt: new Date().toISOString()
+    };
   }
 
   async function getAccountSettings() {
-    const result = await apiRequest("/api/settings", { method: "GET" });
-    return { ok: true, ...(result?.data || {}) };
+    return { ok: true, settings: {} };
   }
 
-  async function saveAccountSettings(settings) {
-    const result = await apiRequest("/api/settings", {
-      method: "PUT",
-      body: JSON.stringify({ settings: settings || {} })
-    });
-    return { ok: true, ...(result?.data || {}) };
+  async function saveAccountSettings(_settings) {
+    return { ok: true };
   }
 
   async function downloadPdfData(base64Data, filename, saveAs = false, conflictAction = "overwrite") {
@@ -1674,10 +1720,5 @@
     return false;
   });
 
-  chrome.alarms?.create?.("exportai-membership-refresh", { periodInMinutes: 30 });
-  chrome.alarms?.onAlarm?.addListener?.((alarm) => {
-    if (alarm?.name === "exportai-membership-refresh") {
-      void refreshMembershipStatus().catch(() => {});
-    }
-  });
+  // Standalone mode: no membership alarm needed
 })();

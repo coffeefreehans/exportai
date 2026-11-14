@@ -863,7 +863,19 @@
         continue;
       }
 
-      const fileHandle = await directoryHandle.getFileHandle(filenameBasename(file.filename), { create: true });
+      const segments = String(file.filename || "chat-export")
+        .replace(/\\/g, "/")
+        .split("/")
+        .map((segment) => segment.trim())
+        .filter(Boolean)
+        .filter((segment) => segment !== "." && segment !== "..");
+      const fileName = segments.pop() || "chat-export";
+      let currentDir = directoryHandle;
+      for (const segment of segments) {
+        currentDir = await currentDir.getDirectoryHandle(segment, { create: true });
+      }
+
+      const fileHandle = await currentDir.getFileHandle(fileName, { create: true });
       const writable = await fileHandle.createWritable();
       try {
         await writable.write(directoryExportFileBlob(file));
@@ -909,18 +921,54 @@
     return pathSegments.join("/");
   }
 
-  function resolveDownloadFilename(baseFilename, settings) {
-    const safeBaseFileName = String(baseFilename || "chat-export");
-    if (settings?.saveMode !== "custom") {
-      return safeBaseFileName;
+  function sanitizeFolderName(value) {
+    const rawValue = String(value || "").trim();
+    if (!rawValue) {
+      return "chat";
     }
 
-    const safeFolder = normalizeCustomDownloadFolder(settings.customDownloadFolder);
-    if (!safeFolder) {
-      return safeBaseFileName;
+    const normalizedValue = rawValue.normalize ? rawValue.normalize("NFC") : rawValue;
+    let clean = normalizedValue
+      .replace(/[<>:"/\\|?*\u0000-\u001F]/g, " ")
+      .replace(/\s+/g, " ")
+      .replace(/[. ]+$/g, "")
+      .trim();
+
+    if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(clean)) {
+      clean = `_${clean}`;
     }
 
-    return `${safeFolder}/${safeBaseFileName}`;
+    return clean || "chat";
+  }
+
+  function resolveDownloadFilename(baseFilename, settings, conversation) {
+    const rawPath = String(baseFilename || "chat-export").replace(/\\/g, "/");
+    const rawSegments = rawPath.split("/").map((segment) => segment.trim()).filter(Boolean);
+    const rawFileName = rawSegments.pop() || "chat-export";
+
+    const dotIndex = rawFileName.lastIndexOf(".");
+    const ext = dotIndex > 0 ? rawFileName.slice(dotIndex) : "";
+    const nameWithoutExt = dotIndex > 0 ? rawFileName.slice(0, dotIndex) : rawFileName;
+
+    const titleCandidate = conversation?.chatName || conversation?.title || nameWithoutExt || "chat";
+    const cleanTitle = sanitizeFolderName(titleCandidate);
+
+    const folderName = cleanTitle;
+    const fileName = `${cleanTitle}${ext}`;
+
+    const pathSegments = [];
+
+    if (settings?.saveMode === "custom") {
+      const safeFolder = normalizeCustomDownloadFolder(settings.customDownloadFolder);
+      if (safeFolder) {
+        pathSegments.push(safeFolder);
+      }
+    }
+
+    pathSegments.push(folderName);
+    pathSegments.push(fileName);
+
+    return pathSegments.join("/");
   }
 
   function escapeRegExp(value) {
@@ -1384,8 +1432,8 @@
       : { ok: false, isMember: false, error: response?.error || "membership_unavailable" };
   }
 
-  function hasPaidFeatureAccess(membership) {
-    return Boolean(PAID_FEATURES_TEMPORARILY_UNLOCKED || membership?.isMember);
+  function hasPaidFeatureAccess(_membership) {
+    return true;
   }
 
   async function assertAllowedFormatsForMembership(formats) {
@@ -2011,7 +2059,7 @@
         let htmlDocument = "";
 
         if (targetFormat === EXPORT_FORMATS.TXT) {
-          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "txt"), settings);
+          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "txt"), settings, processedConversation);
           root.postProcess.setResolvedFileNameMetadata(processedConversation, filename);
           const formatter = exporter.toIrcText || exporter.toChatText;
 
@@ -2021,35 +2069,35 @@
 
           content = formatter(processedConversation);
         } else if (targetFormat === EXPORT_FORMATS.HTML) {
-          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "html"), settings);
+          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "html"), settings, processedConversation);
           root.postProcess.setResolvedFileNameMetadata(processedConversation, filename);
           htmlDocument = exporter.toHtmlDocument(processedConversation, exportSettings);
           htmlDocument = await inlineImagesInHtmlDocument(htmlDocument);
           content = htmlDocument;
           mimeType = "text/html;charset=utf-8";
         } else if (targetFormat === EXPORT_FORMATS.MHT) {
-          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "mht"), settings);
+          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "mht"), settings, processedConversation);
           root.postProcess.setResolvedFileNameMetadata(processedConversation, filename);
           htmlDocument = exporter.toHtmlDocument(processedConversation, exportSettings);
           htmlDocument = await inlineImagesInHtmlDocument(htmlDocument);
           content = exporter.toMhtDocument(htmlDocument, processedConversation);
           mimeType = "application/octet-stream";
         } else if (targetFormat === EXPORT_FORMATS.PDF) {
-          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "pdf"), settings);
+          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "pdf"), settings, processedConversation);
           root.postProcess.setResolvedFileNameMetadata(processedConversation, filename);
           htmlDocument = typeof exporter.toPdfDocument === "function"
             ? exporter.toPdfDocument(processedConversation, exportSettings)
             : exporter.toHtmlDocument(processedConversation, exportSettings);
           htmlDocument = await inlineImagesInHtmlDocument(htmlDocument);
         } else if (targetFormat === EXPORT_FORMATS.MD) {
-          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "md"), settings);
+          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "md"), settings, processedConversation);
           root.postProcess.setResolvedFileNameMetadata(processedConversation, filename);
           content = typeof exporter.toMarkdownDocument === "function"
             ? exporter.toMarkdownDocument(processedConversation, exportSettings)
             : stripHtmlToText(exporter.toHtmlDocument(processedConversation, exportSettings));
           mimeType = "text/markdown;charset=utf-8";
         } else if (targetFormat === EXPORT_FORMATS.DOCX) {
-          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "docx"), settings);
+          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "docx"), settings, processedConversation);
           root.postProcess.setResolvedFileNameMetadata(processedConversation, filename);
           htmlDocument = exporter.toHtmlDocument(processedConversation, exportSettings);
           htmlDocument = await inlineImagesInHtmlDocument(htmlDocument);
@@ -2057,13 +2105,13 @@
           content = await blobToDataUrlLocal(blob);
           mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
         } else if (targetFormat === EXPORT_FORMATS.XLSX) {
-          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "xlsx"), settings);
+          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "xlsx"), settings, processedConversation);
           root.postProcess.setResolvedFileNameMetadata(processedConversation, filename);
           const blob = await createXlsxBlob(processedConversation);
           content = await blobToDataUrlLocal(blob);
           mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
         } else if (targetFormat === EXPORT_FORMATS.PNG) {
-          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "png"), settings);
+          filename = resolveDownloadFilename(exporter.buildFileName(processedConversation, "png"), settings, processedConversation);
           root.postProcess.setResolvedFileNameMetadata(processedConversation, filename);
           htmlDocument = exporter.toHtmlDocument(processedConversation, exportSettings);
           htmlDocument = await inlineImagesInHtmlDocument(htmlDocument);
@@ -2104,14 +2152,14 @@
 
             if (shouldReturnFiles) {
               await writeGeneratedFile({
-                filename: filenameBasename(filename),
+                filename,
                 mimeType: "application/pdf",
                 dataUrl: response.dataUrl
               });
             }
           } else {
             await writeGeneratedFile({
-              filename: filenameBasename(filename),
+              filename,
               mimeType,
               content: targetFormat === EXPORT_FORMATS.DOCX || targetFormat === EXPORT_FORMATS.XLSX || targetFormat === EXPORT_FORMATS.PNG ? "" : content,
               dataUrl: targetFormat === EXPORT_FORMATS.DOCX || targetFormat === EXPORT_FORMATS.XLSX || targetFormat === EXPORT_FORMATS.PNG ? content : ""
@@ -2187,7 +2235,8 @@
           );
           const companionFilename = resolveDownloadFilename(
             exporter.buildFileName(conversationForCompanion, "mht"),
-            settings
+            settings,
+            conversationForCompanion
           );
           root.postProcess.setResolvedFileNameMetadata(conversationForCompanion, companionFilename);
           const mhtContent = exporter.toMhtDocument(htmlDoc, conversationForCompanion);
